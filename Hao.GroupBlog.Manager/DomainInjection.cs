@@ -15,6 +15,7 @@ namespace Hao.GroupBlog.Manager
             services.AddSingleton<ICacheProvider, MemoryCacheProvider>();
 
             services.AddTransient<IResourceManager, ResourceManager>();
+            services.AddTransient<IMemberManager, MemberManager>();
             services.AddScoped<PrivilegeManager>();
 
             return services;

@@ -5,9 +5,11 @@ namespace Hao.GroupBlog.Domain.Interfaces
 {
     public interface IResourceManager
     {
-        public Task<ResponseResult<bool>> Save(ResourceM model);
+        public Task<ResponseResult<bool>> Save(FileM model);
 
-        public Task<ResponseResult<ResourceM>> GetByCode(string code);
+        public Task<ResponseResult<FileM>> GetByCode(string code);
+
+        public Task<ResponsePagingResult<ResourceM>> GetList(PagingParameter<ResourceFilter> parameter);
 
         public string GetNewCode();
 

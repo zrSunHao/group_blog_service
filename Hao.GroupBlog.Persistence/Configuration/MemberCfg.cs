@@ -8,7 +8,7 @@ namespace Hao.GroupBlog.Persistence.Configuration
     {
         public override void EntityConfigure(EntityTypeBuilder<Member> builder)
         {
-            builder.Property(x => x.Name).HasMaxLength(32).IsRequired();
+            builder.Property(x => x.UserName).HasMaxLength(32).IsRequired();
 
             builder.Property(x => x.Role).IsRequired();
 
@@ -21,7 +21,7 @@ namespace Hao.GroupBlog.Persistence.Configuration
             builder.Property(x => x.Remark).HasMaxLength(512);
 
 
-            builder.HasIndex(x => x.Name).IsUnique();
+            builder.HasIndex(x => x.UserName).IsUnique();
         }
     }
 }

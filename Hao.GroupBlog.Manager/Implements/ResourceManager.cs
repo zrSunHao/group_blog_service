@@ -34,7 +34,7 @@ namespace Hao.GroupBlog.Manager.Implements
             _cache = cache;
         }
 
-        public async Task<ResponseResult<bool>> Save(ResourceM model)
+        public async Task<ResponseResult<bool>> Save(FileM model)
         {
             var res = new ResponseResult<bool>();
             try
@@ -51,15 +51,15 @@ namespace Hao.GroupBlog.Manager.Implements
             return res;
         }
 
-        public async Task<ResponseResult<ResourceM>> GetByCode(string code)
+        public async Task<ResponseResult<FileM>> GetByCode(string code)
         {
-            var res = new ResponseResult<ResourceM>();
+            var res = new ResponseResult<FileM>();
             try
             {
                 var entity = await _dbContext.FileResource
                     .FirstOrDefaultAsync(x => x.Code == code);
                 if (entity == null) throw new MyCustomException("未查询到文件信息");
-                res.Data = _mapper.Map<ResourceM>(entity);
+                res.Data = _mapper.Map<FileM>(entity);
             }
             catch (Exception e)
             {
@@ -69,6 +69,21 @@ namespace Hao.GroupBlog.Manager.Implements
             return res;
         }
 
+        public async Task<ResponsePagingResult<ResourceM>> GetList(PagingParameter<ResourceFilter> parameter)
+        {
+            var res = new ResponsePagingResult<ResourceM>();
+            try
+            {
+
+
+            }
+            catch (Exception e)
+            {
+                res.AddError(e);
+                _logger.LogError(e, $"获取资源列表失败！");
+            }
+            return res;
+        }
 
         public string GetNewCode()
         {

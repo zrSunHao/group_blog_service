@@ -8,10 +8,13 @@ namespace Hao.GroupBlog.Manager.DataMaps
     {
         public ResourceProfile()
         {
-            CreateMap<FileResource, ResourceM>();
-            CreateMap<ResourceM, FileResource>()
+            CreateMap<FileResource, FileM>();
+            CreateMap<FileM, FileResource>()
                 .ForMember(x => x.Id, y => y.Ignore())
                 .ForMember(x => x.CreatedAt, y => y.MapFrom(z => DateTime.Now));
+
+            CreateMap<FileResource, ResourceM>()
+                .ForMember(x => x.FileName, y => y.MapFrom(z => z.Name));
         }
     }
 }

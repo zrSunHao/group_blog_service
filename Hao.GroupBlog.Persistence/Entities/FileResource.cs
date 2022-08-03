@@ -1,4 +1,5 @@
-﻿using Hao.GroupBlog.Persistence.Attributes;
+﻿using Hao.GroupBlog.Common.Enums;
+using Hao.GroupBlog.Persistence.Attributes;
 using Hao.GroupBlog.Persistence.Consts;
 using Hao.GroupBlog.Persistence.Database;
 using Microsoft.EntityFrameworkCore;
@@ -30,8 +31,7 @@ namespace Hao.GroupBlog.Persistence.Entities
         public string OwnId { get; set; }
 
         [Required]
-        [MaxLength(16)]
-        public string Category { get; set; }
+        public FileCategory Category { get; set; }
 
         [Required]
         [MaxLength(64)]

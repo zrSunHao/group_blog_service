@@ -8,7 +8,7 @@ namespace Hao.GroupBlog.Persistence.Entities
     [TablePrefix(PrefixConsts.Member)]
     public class Member : BaseEntity
     {
-        public string Name { get; set; }
+        public string UserName { get; set; }
 
         public RoleType Role { get; set; }
 
