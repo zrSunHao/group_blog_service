@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Hao.GroupBlog.Domain\Hao.GroupBlog.Domain.csproj" />
     <ProjectReference Include="..\Hao.GroupBlog.Persistence\Hao.GroupBlog.Persistence.csproj" />
     <ProjectReference Include="..\Hao.GroupBlog.Utils\Hao.GroupBlog.Utils.csproj" />
