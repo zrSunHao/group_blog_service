@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hao.GroupBlog.Domain\Hao.GroupBlog.Domain.csproj" />
+    <ProjectReference Include="..\Hao.GroupBlog.Persistence\Hao.GroupBlog.Persistence.csproj" />
+    <ProjectReference Include="..\Hao.GroupBlog.Utils\Hao.GroupBlog.Utils.csproj" />
+  </ItemGroup>
+
+</Project>
