@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Hao.GroupBlog.Persistence.Entities
 {
-    [Table(nameof(UserLastLoginRecord))]
+    [Table(nameof(Note))]
     [Index(nameof(ContentId), IsUnique = true)]
     public class Note
     {
