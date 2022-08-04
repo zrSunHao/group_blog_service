@@ -33,7 +33,7 @@ namespace Hao.GroupBlog.Persistence.Database
                 throw new ArgumentNullException("机器码为空");
             lock (_lock)
             {
-                string time = DateTime.Now.ToString("yyMMdd_HHmmss");
+                string time = DateTime.Now.ToString("yyMMddHHmmss");
                 if (time != _time) { _time = time; _index = 1; }
                 else _index++;
                 if (string.IsNullOrEmpty(_tablePrefix))
@@ -46,7 +46,7 @@ namespace Hao.GroupBlog.Persistence.Database
             }
             string rand = _random.Next(100, 999).ToString();
             // 表前缀4位、时间13位、机器码4位、顺序码5位、随机码3位
-            return $"{_tablePrefix.PadRight(4, 'X')}{_time}{machine.PadLeft(4, 'X')}{string.Format("{0:D5}", _index)}{rand}";
+            return $"{_tablePrefix}{_time}{machine}X{string.Format("{0:D5}", _index)}{rand}";
         }
 
         private string GetTablePrefix()

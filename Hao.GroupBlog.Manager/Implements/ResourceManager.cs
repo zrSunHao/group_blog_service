@@ -15,11 +15,6 @@ namespace Hao.GroupBlog.Manager.Implements
 {
     public class ResourceManager : BaseManager, IResourceManager
     {
-        private readonly string CODE_PREFIX = "FR";
-        private string _codeTime = "";
-        private int _codeIndex = 1;
-        private Random _codeRandom = new Random();
-        private object _codeLock = new object();
         private readonly ILogger _logger;
         private readonly ICacheProvider _cache;
         public ResourceManager(GbDbContext dbContext,
@@ -87,15 +82,8 @@ namespace Hao.GroupBlog.Manager.Implements
 
         public string GetNewCode()
         {
-            lock (_codeLock)
-            {
-                string time = DateTime.Now.ToString("yyMMddHHmmss");
-                if (time != _codeTime) { _codeTime = time; _codeIndex = 1; }
-                else _codeIndex++;
-            }
-            string rand = _codeRandom.Next(100, 999).ToString();
-            // 前缀2位、时间12位、顺序码5位、随机码3位、机器码4位
-            return $"{CODE_PREFIX}{_codeTime}{string.Format("{0:D5}", _codeIndex)}{rand}_{MachineCode}";
+            var entity = new FileResource();
+            return entity.GetId(MachineCode);
         }
 
         public string BuilderFileUrl(string? fileName)

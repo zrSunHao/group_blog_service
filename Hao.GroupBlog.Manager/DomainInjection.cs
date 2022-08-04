@@ -16,6 +16,8 @@ namespace Hao.GroupBlog.Manager
 
             services.AddTransient<IResourceManager, ResourceManager>();
             services.AddTransient<IMemberManager, MemberManager>();
+            services.AddTransient<INoteManager, NoteManager>();
+            services.AddTransient<ISeriesManager, SeriesManager>();
             services.AddScoped<PrivilegeManager>();
 
             return services;

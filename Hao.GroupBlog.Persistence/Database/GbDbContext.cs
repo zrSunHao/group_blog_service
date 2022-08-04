@@ -11,7 +11,13 @@ namespace Hao.GroupBlog.Persistence.Database
         public DbSet<Member> Member { get; set; }
         public DbSet<UserLastLoginRecord> UserLastLoginRecord { get; set; }
         public DbSet<FileResource> FileResource { get; set; }
-
+        public DbSet<Domain> Domain { get; set; }
+        public DbSet<Topic> Topic { get; set; }
+        public DbSet<Column> Column { get; set; }
+        public DbSet<Note> Note { get; set; }
+        public DbSet<NoteContent> NoteContent { get; set; }
+        public DbSet<Favorite> Favorite { get; set; }
+        public DbSet<Sequence> Sequence { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
