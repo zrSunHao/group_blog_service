@@ -11,6 +11,8 @@ namespace Hao.GroupBlog.Persistence.Configuration
             builder.Property(x => x.Name).HasMaxLength(64).IsRequired();
 
             builder.Property(x => x.Logo).HasMaxLength(64).IsRequired();
+
+            builder.Property(x => x.DomainId).HasMaxLength(32).IsRequired();
         }
     }
 }

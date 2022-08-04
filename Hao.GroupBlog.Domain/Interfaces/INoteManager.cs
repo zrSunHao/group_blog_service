@@ -1,29 +1,30 @@
-﻿namespace Hao.GroupBlog.Domain.Interfaces
+﻿using Hao.GroupBlog.Domain.Models;
+using Hao.GroupBlog.Domain.Paging;
+
+namespace Hao.GroupBlog.Domain.Interfaces
 {
     public interface INoteManager
     {
         public Task<bool> IsOpen(string id);
 
-        // 添加Note
+        public Task<ResponseResult<bool>> Add(NoteM model);
 
-        // 修改Note
+        public Task<ResponseResult<bool>> Update(NoteM model);
 
-        // 删除Note
+        public Task<ResponseResult<bool>> Delete(string id);
 
-        // 列表Note
+        public Task<ResponsePagingResult<NoteM>> GetList(PagingParameter<string> parameter);
 
-        // 收藏Note
+        public Task<ResponseResult<bool>> ToColumn(string id, string columnId);
 
-        // 取消收藏Note
+        public Task<ResponseResult<bool>> Favorite(string id, string? columnId);
 
-        // 获取NoteContent
+        public Task<ResponseResult<bool>> CancelFavorite(string id);
 
-        // 保存NoteContent
+        public Task<ResponseResult<NoteContentM>> GetContent(string id);
 
-        // 获取分享的NoteContent
+        public Task<ResponseResult<bool>> SaveContent(NoteContentM model);
 
-        // 我的Note移动到指定column
-
-        // 分享的Note移动到指定column
+        public Task<ResponseResult<NoteContentM>> GetOpenedContent(string id);
     }
 }

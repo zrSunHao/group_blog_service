@@ -16,6 +16,8 @@ namespace Hao.GroupBlog.Domain.Models
         public string Name { get; set; }
 
         public string Logo { get; set; }
+
+        public string DomainId { get; set; }
     }
 
     public class ColumnM
@@ -27,12 +29,16 @@ namespace Hao.GroupBlog.Domain.Models
         public string Logo { get; set; }
 
         public string Intro { get; set; }
+
+        public string TopicId { get; set; }
     }
 
     public class SequnceM
     {
-        public string GroupKey { get; set; }
+        public string? DragGroupKey { get; set; }
 
-        public List<OptionItem<int>> Targets { get; set; }
+        public string DropGroupKey { get; set; }
+
+        public List<OptionItem<int>> DropTargets { get; set; }
     }
 }

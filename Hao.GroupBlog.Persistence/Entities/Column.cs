@@ -12,5 +12,7 @@ namespace Hao.GroupBlog.Persistence.Entities
         public string Logo { get; set; }
 
         public string Intro { get; set; }
+
+        public string TopicId { get; set; }
     }
 }

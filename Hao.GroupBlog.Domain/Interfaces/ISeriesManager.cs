@@ -1,43 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Hao.GroupBlog.Domain.Models;
+using Hao.GroupBlog.Domain.Paging;
 
 namespace Hao.GroupBlog.Domain.Interfaces
 {
     public interface ISeriesManager
     {
-        // 添加Domain
+        public Task<ResponseResult<bool>> AddDomain(DomainM model);
 
-        // 修改Domain
+        public Task<ResponseResult<bool>> UpdateDomain(DomainM model);
 
-        // 删除Domain
+        public Task<ResponseResult<bool>> DeleteDomain(string id);
 
-        // 列表Domain
+        public Task<ResponsePagingResult<DomainM>> GetDomainList();
 
-        // 排序Domain
-
-
-        // 添加Topic
-
-        // 修改Topic
-
-        // 删除Topic
-
-        // 列表Topic
-
-        // 排序Topic
+        public Task<ResponseResult<bool>> SortDomain(SequnceM model);
 
 
-        // 添加Column
+        public Task<ResponseResult<bool>> AddTopic(TopicM model);
 
-        // 修改Column
+        public Task<ResponseResult<bool>> UpdateTopic(TopicM model);
 
-        // 删除Column
+        public Task<ResponseResult<bool>> DeleteTopic(string id);
 
-        // 列表Column
+        public Task<ResponsePagingResult<TopicM>> GetTopicList(string domainId);
 
-        // 排序Column
+        public Task<ResponseResult<bool>> SortTopic(SequnceM model);
+
+
+        public Task<ResponseResult<bool>> AddColumn(ColumnM model);
+
+        public Task<ResponseResult<bool>> UpdateColumn(ColumnM model);
+
+        public Task<ResponseResult<bool>> DeleteColumnc(string id);
+
+        public Task<ResponsePagingResult<TopicM>> GetColumnList(string topicId);
+
+        public Task<ResponseResult<bool>> SortColumn(SequnceM model);
     }
 }
