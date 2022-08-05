@@ -109,7 +109,7 @@ namespace Hao.GroupBlog.Web.Controllers
 
         [AllowAnonymous]
         [HttpGet("GetNoteFileByName")]
-        public async Task<IActionResult> GetNoteFileByName(string name, string noteId)
+        public async Task<IActionResult> GetNoteOpenedFileByName(string name, string noteId)
         {
             try
             {

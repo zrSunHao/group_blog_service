@@ -30,16 +30,16 @@ namespace Hao.GroupBlog.Web.Controllers
             return await _manager.Update(model);
         }
 
-        [HttpDelete("Delete")]
-        public async Task<ResponseResult<bool>> Delete(string id)
+        [HttpPatch("AddProfile")]
+        public async Task<ResponseResult<bool>> AddProfile(string id, string profileName)
         {
-            return await _manager.Delete(id);
+            return await _manager.AddProfile(id, profileName);
         }
 
-        [HttpPost("GetList")]
-        public async Task<ResponsePagingResult<NoteM>> GetList(PagingParameter<string> parameter)
+        [HttpPatch("Hit")]
+        public async Task<ResponseResult<bool>> Hit(string id)
         {
-            return await _manager.GetList(parameter);
+            return await _manager.Hit(id);
         }
 
         [HttpPatch("ToColumn")]
@@ -47,6 +47,20 @@ namespace Hao.GroupBlog.Web.Controllers
         {
             return await _manager.ToColumn(id, columnId);
         }
+
+        [HttpDelete("Delete")]
+        public async Task<ResponseResult<bool>> Delete(string id)
+        {
+            return await _manager.Delete(id);
+        }
+
+        [HttpPost("GetMyList")]
+        public async Task<ResponsePagingResult<NoteM>> GetMyList(PagingParameter<string> parameter)
+        {
+            return await _manager.GetMyList(parameter);
+        }
+
+        
 
         [HttpPatch("Favorite")]
         public async Task<ResponseResult<bool>> Favorite(string id, string? columnId)
@@ -76,6 +90,18 @@ namespace Hao.GroupBlog.Web.Controllers
         public async Task<ResponseResult<NoteContentM>> GetOpenedContent(string id)
         {
             return await _manager.GetOpenedContent(id);
+        }
+
+        [HttpPost("GetFavoriteList")]
+        public async Task<ResponsePagingResult<NoteM>> GetFavoriteList(PagingParameter<string> parameter)
+        {
+            return await _manager.GetFavoriteList(parameter);
+        }
+
+        [HttpPost("GetOpenedList")]
+        public async Task<ResponsePagingResult<NoteM>> GetOpenedList(PagingParameter<string> parameter)
+        {
+            return await _manager.GetOpenedList(parameter);
         }
     }
 }

@@ -32,8 +32,8 @@ namespace Hao.GroupBlog.Persistence.Entities
         [Required]
         public bool Opened { get; set; } = false;
 
-        [MaxLength(32)]
-        public string? ProfileId { get; set; }
+        [MaxLength(64)]
+        public string? ProfileName { get; set; }
 
         [Required]
         [MaxLength(256)]

@@ -6,6 +6,8 @@
 
         public string? ContentId { get; set; }
 
+        public string? ColumnId { get; set; }
+
         public string Name { get; set; }
 
         public string Keys { get; set; }
@@ -14,7 +16,7 @@
 
         public bool Opened { get; set; } = false;
 
-        public string ProfileId { get; set; }
+        public string? ProfileName { get; set; }
 
         public string Intro { get; set; }
 
