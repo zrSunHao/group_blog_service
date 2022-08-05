@@ -3,6 +3,7 @@ using Serilog.Events;
 using Hao.GroupBlog.Web.Extentions;
 using Hao.GroupBlog.Manager;
 using Hao.GroupBlog.Web.Middlewares;
+using Microsoft.Extensions.FileProviders;
 
 Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Debug)
@@ -27,6 +28,7 @@ try
     builder.Services.AddControllers();
     builder.Services.AddSwagger();
     builder.Services.AddJwtAuthentication(builder.Configuration);
+    builder.Services.AddDirectoryBrowser();
     #endregion
 
     var app = builder.Build();
@@ -38,7 +40,24 @@ try
     app.UseHttpsRedirection();
     app.UseAuthentication();
     app.UseRouting();
-    app.UseCors(x => x.AllowAnyMethod().AllowAnyHeader().SetIsOriginAllowed(origin => true).AllowCredentials()); 
+    app.UseCors(x => x.AllowAnyMethod().AllowAnyHeader().SetIsOriginAllowed(origin => true).AllowCredentials());
+    app.Use(async (context, next) =>
+    {
+        var path = context.Request.Path.Value;
+        if (path == "" || path == "/") context.Response.Redirect($"/index.html");
+        else await next();
+    });
+    string spaRoot = builder.Configuration["ClientAppPath"];
+    app.UseStaticFiles(new StaticFileOptions()
+    {
+        FileProvider = new PhysicalFileProvider(spaRoot),
+        RequestPath = ""
+    });
+    app.UseDirectoryBrowser(new DirectoryBrowserOptions()
+    {
+        FileProvider = new PhysicalFileProvider(spaRoot),
+        RequestPath = ""
+    });
     app.UseAuthorization();
     app.UseMiddleware<PrivilegeMiddleware>();
     app.MapControllers();

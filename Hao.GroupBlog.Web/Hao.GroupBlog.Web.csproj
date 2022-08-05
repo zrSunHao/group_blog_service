@@ -24,4 +24,8 @@
     <ProjectReference Include="..\Hao.GroupBlog.Manager\Hao.GroupBlog.Manager.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\ClientApp\" />
+  </ItemGroup>
+
 </Project>
