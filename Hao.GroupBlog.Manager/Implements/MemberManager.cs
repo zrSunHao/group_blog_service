@@ -1,18 +1,17 @@
 ﻿using AutoMapper;
+using Hao.GroupBlog.Domain.Consts;
 using Hao.GroupBlog.Domain.Interfaces;
 using Hao.GroupBlog.Domain.Models;
 using Hao.GroupBlog.Domain.Paging;
 using Hao.GroupBlog.Manager.Basic;
 using Hao.GroupBlog.Manager.Providers;
 using Hao.GroupBlog.Persistence.Database;
+using Hao.GroupBlog.Persistence.Entities;
+using Hao.GroupBlog.Utils.Handlers;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Hao.GroupBlog.Manager.Implements
 {
@@ -21,7 +20,7 @@ namespace Hao.GroupBlog.Manager.Implements
         private readonly ILogger _logger;
         private readonly ICacheProvider _cache;
 
-        public MemberManager(GbDbContext dbContext, 
+        public MemberManager(GbDbContext dbContext,
             IMapper mapper,
             ICacheProvider cache,
             IConfiguration configuration,
@@ -33,18 +32,32 @@ namespace Hao.GroupBlog.Manager.Implements
             _cache = cache;
         }
 
+        private static object _lock = new object();
         public async Task<ResponseResult<bool>> Register(LoginM model)
         {
             var res = new ResponseResult<bool>();
             try
             {
-                
+                lock (_lock)
+                {
+                    var exist = _dbContext.Member.Any(x => x.UserName == model.UserName);
+                    if (exist) throw new MyCustomException("账号已存在！");
+                }
+
+                Member member = _mapper.Map<LoginM, Member>(model);
+                member.Id = member.GetId(MachineCode);
+                member.CreatedById = member.Id;
+                HashHandler.CreateHash(model.Password, out var hash, out var salt);
+                member.Password = hash;
+                member.PasswordSalt = salt;
+
+                await _dbContext.AddAsync(member);
                 await _dbContext.SaveChangesAsync();
             }
             catch (Exception e)
             {
                 res.AddError(e);
-                _logger.LogError(e, $"账号为【{model.UserName}】的用户注册失败！");
+                _logger.LogError(e, $"账号【{model.UserName}】注册失败！");
             }
             return res;
         }
@@ -54,13 +67,52 @@ namespace Hao.GroupBlog.Manager.Implements
             var res = new ResponseResult<LoginRes>();
             try
             {
+                Member? member = await _dbContext.Member.AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.UserName == model.UserName && !x.Deleted);
+                if (member == null) throw new MyCustomException("账号或密码不正确！");
+                var valid = HashHandler.VerifyHash(model.Password, member.Password, member.PasswordSalt);
+                if (!valid) throw new MyCustomException("账号或密码不正确！");
 
+                UserLastLoginRecord record = _mapper.Map<Member, UserLastLoginRecord>(member);
+                await _dbContext.AddAsync(record);
                 await _dbContext.SaveChangesAsync();
+
+                _cache.Save(record.LoginId.ToString(), record);
+                var token = this.BuilderToken(record.LoginId.ToString(), member.UserName, record.ExpiredAt);
+                res.Data = new LoginRes()
+                {
+                    UserName = member.UserName,
+                    Role = member.Role,
+                    Key = record.LoginId.ToString(),
+                    Token = token
+                };
             }
             catch (Exception e)
             {
                 res.AddError(e);
-                _logger.LogError(e, $"账号为【{model.UserName}】的用户登录失败！");
+                _logger.LogError(e, $"账号【{model.UserName}】登录失败！");
+            }
+            return res;
+        }
+
+        public async Task<ResponseResult<bool>> Logout()
+        {
+            var res = new ResponseResult<bool>();
+            try
+            {
+                var loginId = this.CurrentLoginId;
+                var entity = await _dbContext.UserLastLoginRecord.FirstOrDefaultAsync(x => x.LoginId == loginId);
+                if (entity != null)
+                {
+                    entity.ExpiredAt = DateTime.Now;
+                    await _dbContext.SaveChangesAsync();
+                }
+                _cache.Remove(loginId.ToString());
+            }
+            catch (Exception e)
+            {
+                res.AddError(e);
+                _logger.LogError(e, $"用户【{CurrentLoginId}】登出失败！");
             }
             return res;
         }
@@ -70,13 +122,19 @@ namespace Hao.GroupBlog.Manager.Implements
             var res = new ResponseResult<bool>();
             try
             {
-
+                Member? member = await _dbContext.Member.AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.UserName == model.UserName && !x.Deleted);
+                if (member == null) throw new MyCustomException("未查询到用户数据！");
+                member.Remark = model.Remark;
+                member.Role = model.Role;
+                member.LastModifiedAt = DateTime.Now;
+                member.LastModifiedById = CurrentUserId;
                 await _dbContext.SaveChangesAsync();
             }
             catch (Exception e)
             {
                 res.AddError(e);
-                _logger.LogError(e, $"更新账号为【{model.UserName}】的用户信息失败！");
+                _logger.LogError(e, $"更新账号【{model.UserName}】户信息失败！");
             }
             return res;
         }
@@ -86,6 +144,22 @@ namespace Hao.GroupBlog.Manager.Implements
             var res = new ResponseResult<bool>();
             try
             {
+                var entity = await _dbContext.Member
+                    .FirstOrDefaultAsync(x => x.UserName == model.UserName);
+                if (entity == null) throw new MyCustomException("未查询到账号数据！");
+
+                HashHandler.CreateHash(model.NewPsd, out var hash, out var salt);
+                entity.Password = hash;
+                entity.PasswordSalt = salt;
+                entity.LastModifiedAt = DateTime.Now;
+                entity.LastModifiedById = CurrentUserId;
+
+                var record = await _dbContext.UserLastLoginRecord.FirstOrDefaultAsync(x => x.MemberId == entity.Id);
+                if (record != null)
+                {
+                    record.ExpiredAt = DateTime.Now;
+                    _cache.Remove(record.LoginId.ToString());
+                }
 
                 await _dbContext.SaveChangesAsync();
             }
@@ -102,6 +176,24 @@ namespace Hao.GroupBlog.Manager.Implements
             var res = new ResponseResult<bool>();
             try
             {
+                var entity = await _dbContext.Member
+                    .FirstOrDefaultAsync(x => x.Id == CurrentUserId);
+                if (entity == null) throw new MyCustomException("未查询到账号数据！");
+                var valid = HashHandler.VerifyHash(model.OldPsd, entity.Password, entity.PasswordSalt);
+                if (!valid) throw new MyCustomException("原密码不正确！");
+
+                HashHandler.CreateHash(model.NewPsd, out var hash, out var salt);
+                entity.Password = hash;
+                entity.PasswordSalt = salt;
+                entity.LastModifiedAt = DateTime.Now;
+                entity.LastModifiedById = CurrentUserId;
+
+                var record = await _dbContext.UserLastLoginRecord.FirstOrDefaultAsync(x => x.MemberId == entity.Id);
+                if (record != null)
+                {
+                    record.ExpiredAt = DateTime.Now;
+                    _cache.Remove(record.LoginId.ToString());
+                }
 
                 await _dbContext.SaveChangesAsync();
             }
@@ -118,8 +210,45 @@ namespace Hao.GroupBlog.Manager.Implements
             var res = new ResponsePagingResult<MemberM>();
             try
             {
+                var query = from m in _dbContext.Member
+                            join r in _dbContext.UserLastLoginRecord on m.Id equals r.MemberId
+                            where !m.Deleted
+                            select new MemberM()
+                            {
+                                Id = m.Id,
+                                UserName = m.UserName,
+                                Role = m.Role,
+                                Remark = m.Remark,
+                                Limited = m.Limited,
+                                LastLoginAt = r.CreatedAt
+                            };
+                var filter = parameter.Filter;
+                if (filter != null)
+                {
+                    if (!string.IsNullOrEmpty(filter.UserName)) query = query.Where(x => x.UserName.Contains(filter.UserName));
+                    if (filter.Role.HasValue && filter.Role != 0) query = query.Where(x => x.Role == filter.Role.Value);
+                    if (filter.Limited.HasValue) query = query.Where(x => x.Limited == filter.Limited.Value);
+                    if (filter.StartAt.HasValue) query = query.Where(x => x.LastLoginAt >= filter.StartAt.Value);
+                    if (filter.EndAt.HasValue) query = query.Where(x => x.LastLoginAt <= filter.EndAt.Value.AddDays(1).AddSeconds(-1));
+                }
 
-                
+                query = query.OrderByDescending(x => x.LastLoginAt);
+                if (parameter.Sort != null && parameter.Sort.ToLower() == "desc")
+                {
+                    if (parameter.SortColumn?.ToLower() == "UserName".ToLower())
+                        query = query.OrderByDescending(x => x.UserName);
+                }
+                else
+                {
+                    if (parameter.SortColumn?.ToLower() == "UserName".ToLower())
+                        query = query.OrderBy(x => x.UserName);
+                    if (parameter.SortColumn?.ToLower() == "LastLoginAt".ToLower())
+                        query = query.OrderBy(x => x.LastLoginAt);
+                }
+
+                res.RowsCount = await query.CountAsync();
+                query = query.AsPaging(parameter.PageIndex, parameter.PageSize);
+                res.Data = await query.ToListAsync();
             }
             catch (Exception e)
             {
@@ -127,6 +256,23 @@ namespace Hao.GroupBlog.Manager.Implements
                 _logger.LogError(e, $"获取用户列表失败！");
             }
             return res;
+        }
+
+
+        private string BuilderToken(string recordId, string userName, DateTime expiredAt)
+        {
+            var key = GetConfiguration(CfgConsts.PLATFORM_KEY);
+            var issuer = GetConfiguration(CfgConsts.PLATFORM_ISSUER);
+            var msg = new TokenMsg
+            {
+                Id = recordId,
+                Name = userName,
+                ExpiredAt = expiredAt,
+                Key = key,
+                Issuer = issuer,
+            };
+            var handler = new TokenHandler();
+            return handler.BuilderToken(msg);
         }
     }
 }

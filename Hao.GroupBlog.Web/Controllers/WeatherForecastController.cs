@@ -1,5 +1,6 @@
 using Hao.GroupBlog.Common.Enums;
 using Hao.GroupBlog.Web.Attributes;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hao.GroupBlog.Web.Controllers
@@ -21,6 +22,7 @@ namespace Hao.GroupBlog.Web.Controllers
         }
 
         [HttpGet("")]
+        [AllowAnonymous]
         public IEnumerable<WeatherForecast> Get()
         {
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast

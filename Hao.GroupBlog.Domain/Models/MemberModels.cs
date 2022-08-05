@@ -44,6 +44,8 @@ namespace Hao.GroupBlog.Domain.Models
         public RoleType Role { get; set; }
 
         public string Key { get; set; }
+
+        public string Token { get; set; }
     }
 
     public class ResetPsdM

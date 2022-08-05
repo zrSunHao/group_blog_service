@@ -9,6 +9,8 @@ namespace Hao.GroupBlog.Domain.Interfaces
 
         public Task<ResponseResult<LoginRes>> Login(LoginM model);
 
+        public Task<ResponseResult<bool>> Logout();
+
         public Task<ResponseResult<bool>> Update(MemberM model);
 
         public Task<ResponseResult<bool>> ManagerResetPsd(ResetPsdM model);

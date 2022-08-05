@@ -19,15 +19,23 @@ namespace Hao.GroupBlog.Web.Controllers
         }
 
         [HttpPost("Register")]
+        [AllowAnonymous]
         public async Task<ResponseResult<bool>> Register(LoginM model)
         {
             return await _manager.Register(model);
         }
 
         [HttpPost("Login")]
+        [AllowAnonymous]
         public async Task<ResponseResult<LoginRes>> Login(LoginM model)
         {
             return await _manager.Login(model);
+        }
+
+        [HttpDelete("Logout")]
+        public async Task<ResponseResult<bool>> Logout()
+        {
+            return await _manager.Logout();
         }
 
         [HttpPatch("Update")]

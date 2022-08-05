@@ -69,8 +69,35 @@ namespace Hao.GroupBlog.Manager.Implements
             var res = new ResponsePagingResult<ResourceM>();
             try
             {
+                var query = _dbContext.FileResource.AsNoTracking().AsQueryable();
+                var filter = parameter.Filter;
+                if (filter != null)
+                {
+                    if (!string.IsNullOrEmpty(filter.FileName)) query = query.Where(x => x.FileName.Contains(filter.FileName));
+                    if (!string.IsNullOrEmpty(filter.type)) query = query.Where(x => x.Type != null && x.Type.Contains(filter.type));
+                    if (filter.Category.HasValue) query = query.Where(x => x.Category == filter.Category.Value);
+                    if (filter.StartAt.HasValue) query = query.Where(x => x.CreatedAt >= filter.StartAt.Value);
+                    if (filter.EndAt.HasValue) query = query.Where(x => x.CreatedAt <= filter.EndAt.Value.AddDays(1).AddSeconds(-1));
+                }
 
+                query = query.OrderByDescending(x => x.CreatedAt);
+                if (parameter.Sort != null && parameter.Sort.ToLower() == "desc")
+                {
+                    if (parameter.SortColumn?.ToLower() == "FileName".ToLower())
+                        query = query.OrderByDescending(x => x.Name);
+                }
+                else
+                {
+                    if (parameter.SortColumn?.ToLower() == "FileName".ToLower())
+                        query = query.OrderBy(x => x.Name);
+                    if (parameter.SortColumn?.ToLower() == "CreatedAt".ToLower())
+                        query = query.OrderBy(x => x.CreatedAt);
+                }
 
+                res.RowsCount = await query.CountAsync();
+                query = query.AsPaging(parameter.PageIndex, parameter.PageSize);
+                List<FileResource> data = await query.ToListAsync();
+                res.Data = _mapper.Map<List<FileResource>, List<ResourceM>>(data);
             }
             catch (Exception e)
             {
