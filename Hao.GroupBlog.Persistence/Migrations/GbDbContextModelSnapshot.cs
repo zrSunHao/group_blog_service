@@ -297,6 +297,15 @@ namespace Hao.GroupBlog.Persistence.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DeletedById")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Hits")
                         .HasColumnType("INTEGER");
 
@@ -310,7 +319,10 @@ namespace Hao.GroupBlog.Persistence.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("LastModifiedAt")
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastModifiedById")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -321,8 +333,8 @@ namespace Hao.GroupBlog.Persistence.Migrations
                     b.Property<bool>("Opened")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("ProfileId")
-                        .HasMaxLength(32)
+                    b.Property<string>("ProfileName")
+                        .HasMaxLength(64)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

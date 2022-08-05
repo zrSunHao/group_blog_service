@@ -124,11 +124,15 @@ namespace Hao.GroupBlog.Persistence.Migrations
                     Keys = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
                     Hits = table.Column<int>(type: "INTEGER", nullable: false),
                     Opened = table.Column<bool>(type: "INTEGER", nullable: false),
-                    ProfileId = table.Column<string>(type: "TEXT", maxLength: 32, nullable: true),
+                    ProfileName = table.Column<string>(type: "TEXT", maxLength: 64, nullable: true),
                     Intro = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     CreatedById = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
-                    LastModifiedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    LastModifiedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    LastModifiedById = table.Column<string>(type: "TEXT", nullable: true),
+                    Deleted = table.Column<bool>(type: "INTEGER", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    DeletedById = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {

@@ -25,7 +25,7 @@ namespace Hao.GroupBlog.Web.Middlewares
             _logger = logger;
             _configuration = configuration;
             var url = context.Request.Path.Value;
-            if (string.IsNullOrEmpty(url) || url.ToLower().StartsWith("/api"))
+            if (string.IsNullOrEmpty(url) || !url.ToLower().StartsWith("/api"))
             {
                 await _next(context);
             }
