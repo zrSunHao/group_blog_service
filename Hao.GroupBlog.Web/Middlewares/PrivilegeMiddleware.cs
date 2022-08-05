@@ -24,29 +24,37 @@ namespace Hao.GroupBlog.Web.Middlewares
         {
             _logger = logger;
             _configuration = configuration;
-            try
+            var url = context.Request.Path.Value;
+            if (string.IsNullOrEmpty(url) || url.ToLower().StartsWith("/api"))
             {
-                var result = await this.CheckPrivilege(context);
-                if (result) await _next.Invoke(context);
-                else
+                await _next(context);
+            }
+            else
+            {
+                try
+                {
+                    var result = await this.CheckPrivilege(context);
+                    if (result) await _next.Invoke(context);
+                    else
+                    {
+                        context.Response.Clear();
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        await context.Response.WriteAsync("You do not have permission to access the requested data or object!");
+                    }
+                }
+                catch (MyUnauthorizedException e)
                 {
                     context.Response.Clear();
-                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                    await context.Response.WriteAsync("You do not have permission to access the requested data or object!");
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    await context.Response.WriteAsync(e.Message);
                 }
-            }
-            catch (MyUnauthorizedException e)
-            {
-                context.Response.Clear();
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                await context.Response.WriteAsync(e.Message);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e.Message);
-                context.Response.Clear();
-                context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                await context.Response.WriteAsync(e.Message);
+                catch (Exception e)
+                {
+                    _logger.LogError(e.Message);
+                    context.Response.Clear();
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    await context.Response.WriteAsync(e.Message);
+                }
             }
         }
 
