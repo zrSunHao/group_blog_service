@@ -46,7 +46,16 @@ namespace Hao.GroupBlog.Persistence.Entities
         [MaxLength(32)]
         public string CreatedById { get; set; }
 
+        public DateTime? LastModifiedAt { get; set; }
+
+        public string? LastModifiedById { get; set; }
+
         [Required]
-        public DateTime LastModifiedAt { get; set; }
+        public bool Deleted { get; set; } = false;
+
+        public DateTime? DeletedAt { get; set; }
+
+        /// </summary>
+        public string? DeletedById { get; set; }
     }
 }

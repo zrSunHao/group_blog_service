@@ -13,7 +13,7 @@ namespace Hao.GroupBlog.Domain.Interfaces
 
         public Task<ResponsePagingResult<DomainM>> GetDomainList();
 
-        public Task<ResponseResult<bool>> SortDomain(SequnceM model);
+        public Task<ResponseResult<bool>> SortDomain(List<OptionItem<int>> sequnces);
 
 
         public Task<ResponseResult<bool>> AddTopic(TopicM model);
@@ -33,7 +33,7 @@ namespace Hao.GroupBlog.Domain.Interfaces
 
         public Task<ResponseResult<bool>> DeleteColumnc(string id);
 
-        public Task<ResponsePagingResult<TopicM>> GetColumnList(string topicId);
+        public Task<ResponsePagingResult<ColumnM>> GetColumnList(string topicId);
 
         public Task<ResponseResult<bool>> SortColumn(SequnceM model);
     }

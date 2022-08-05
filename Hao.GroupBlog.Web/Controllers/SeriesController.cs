@@ -43,9 +43,9 @@ namespace Hao.GroupBlog.Web.Controllers
         }
 
         [HttpPatch("SortDomain")]
-        public async Task<ResponseResult<bool>> SortDomain(SequnceM model)
+        public async Task<ResponseResult<bool>> SortDomain(List<OptionItem<int>> sequnces)
         {
-            return await _manager.SortDomain(model);
+            return await _manager.SortDomain(sequnces);
         }
 
         [HttpPost("AddTopic")]
@@ -97,7 +97,7 @@ namespace Hao.GroupBlog.Web.Controllers
         }
 
         [HttpGet("GetColumnList")]
-        public async Task<ResponsePagingResult<TopicM>> GetColumnList(string topicId)
+        public async Task<ResponsePagingResult<ColumnM>> GetColumnList(string topicId)
         {
             return await _manager.GetColumnList(topicId);
         }
