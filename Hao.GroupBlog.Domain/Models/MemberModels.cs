@@ -54,6 +54,6 @@ namespace Hao.GroupBlog.Domain.Models
 
         public string NewPsd { get; set; }
 
-        public string OldPsd { get; set; }
+        public string? OldPsd { get; set; }
     }
 }

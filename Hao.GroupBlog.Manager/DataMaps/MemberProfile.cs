@@ -11,6 +11,8 @@ namespace Hao.GroupBlog.Manager.DataMaps
         {
             CreateMap<LoginM, Member>()
                .ForMember(x => x.Id, y => y.Ignore())
+               .ForMember(x => x.Password, y => y.Ignore())
+               .ForMember(x => x.PasswordSalt, y => y.Ignore())
                .ForMember(x => x.UserName, y => y.MapFrom(z => z.UserName))
                .ForMember(x => x.Role, y => y.MapFrom(z => RoleType.ordinary))
                .ForMember(x => x.Remark, y => y.MapFrom(z => "无"))

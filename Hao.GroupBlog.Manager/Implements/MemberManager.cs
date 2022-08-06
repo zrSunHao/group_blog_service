@@ -72,9 +72,21 @@ namespace Hao.GroupBlog.Manager.Implements
                 if (member == null) throw new MyCustomException("账号或密码不正确！");
                 var valid = HashHandler.VerifyHash(model.Password, member.Password, member.PasswordSalt);
                 if (!valid) throw new MyCustomException("账号或密码不正确！");
+                if(member.Limited) throw new MyCustomException("账号被锁定，请联系管理员！");
 
-                UserLastLoginRecord record = _mapper.Map<Member, UserLastLoginRecord>(member);
-                await _dbContext.AddAsync(record);
+                var record = await _dbContext.UserLastLoginRecord.FirstOrDefaultAsync(x => x.MemberId == member.Id);
+                if(record == null)
+                {
+                    record = _mapper.Map<Member, UserLastLoginRecord>(member);
+                    await _dbContext.AddAsync(record);
+                }
+                else
+                {
+                    record.LoginId = Guid.NewGuid();
+                    record.Role = member.Role;
+                    record.CreatedAt = DateTime.Now;
+                    record.ExpiredAt = DateTime.Now.AddDays(1);
+                }
                 await _dbContext.SaveChangesAsync();
 
                 _cache.Save(record.LoginId.ToString(), record);
@@ -122,11 +134,12 @@ namespace Hao.GroupBlog.Manager.Implements
             var res = new ResponseResult<bool>();
             try
             {
-                Member? member = await _dbContext.Member.AsNoTracking()
+                Member? member = await _dbContext.Member
                     .FirstOrDefaultAsync(x => x.UserName == model.UserName && !x.Deleted);
                 if (member == null) throw new MyCustomException("未查询到用户数据！");
                 member.Remark = model.Remark;
                 member.Role = model.Role;
+                member.Limited = model.Limited;
                 member.LastModifiedAt = DateTime.Now;
                 member.LastModifiedById = CurrentUserId;
                 await _dbContext.SaveChangesAsync();
@@ -144,9 +157,11 @@ namespace Hao.GroupBlog.Manager.Implements
             var res = new ResponseResult<bool>();
             try
             {
+                var myRole = CurrentUserRole;
                 var entity = await _dbContext.Member
                     .FirstOrDefaultAsync(x => x.UserName == model.UserName);
                 if (entity == null) throw new MyCustomException("未查询到账号数据！");
+                if(entity.Role > myRole) throw new MyCustomException("您的角色权限低于该账号！");
 
                 HashHandler.CreateHash(model.NewPsd, out var hash, out var salt);
                 entity.Password = hash;
@@ -176,6 +191,7 @@ namespace Hao.GroupBlog.Manager.Implements
             var res = new ResponseResult<bool>();
             try
             {
+                if(string.IsNullOrEmpty(model.OldPsd)) throw new MyCustomException("原密码为空！");
                 var entity = await _dbContext.Member
                     .FirstOrDefaultAsync(x => x.Id == CurrentUserId);
                 if (entity == null) throw new MyCustomException("未查询到账号数据！");
@@ -210,9 +226,11 @@ namespace Hao.GroupBlog.Manager.Implements
             var res = new ResponsePagingResult<MemberM>();
             try
             {
+                var myRole = CurrentUserRole;
                 var query = from m in _dbContext.Member
-                            join r in _dbContext.UserLastLoginRecord on m.Id equals r.MemberId
-                            where !m.Deleted
+                            join r in _dbContext.UserLastLoginRecord on m.Id equals r.MemberId into z
+                            from t in z.DefaultIfEmpty()
+                            where !m.Deleted && m.Role <= myRole
                             select new MemberM()
                             {
                                 Id = m.Id,
@@ -220,7 +238,7 @@ namespace Hao.GroupBlog.Manager.Implements
                                 Role = m.Role,
                                 Remark = m.Remark,
                                 Limited = m.Limited,
-                                LastLoginAt = r.CreatedAt
+                                LastLoginAt = t.CreatedAt
                             };
                 var filter = parameter.Filter;
                 if (filter != null)
