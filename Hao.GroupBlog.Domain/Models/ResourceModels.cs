@@ -6,6 +6,8 @@ namespace Hao.GroupBlog.Domain.Models
     {
         public string Code { get; set; }
 
+        public string Name { get; set; }
+
         public string FileName { get; set; }
 
         public FileCategory Category { get; set; }

@@ -4,6 +4,7 @@ using Hao.GroupBlog.Web.Extentions;
 using Hao.GroupBlog.Manager;
 using Hao.GroupBlog.Web.Middlewares;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Debug)
@@ -29,6 +30,10 @@ try
     builder.Services.AddSwagger();
     builder.Services.AddJwtAuthentication(builder.Configuration);
     builder.Services.AddDirectoryBrowser();
+    builder.Services.Configure<KestrelServerOptions>(options =>
+    {
+        options.Limits.MaxRequestBodySize = 1024 * 1024 * 256;
+    });
     #endregion
 
     var app = builder.Build();

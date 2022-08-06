@@ -35,6 +35,8 @@ namespace Hao.GroupBlog.Manager.Implements
             try
             {
                 var entity = _mapper.Map<FileResource>(model);
+                entity.CreatedAt = DateTime.Now;
+                entity.CreatedById = CurrentUserId;
                 await _dbContext.AddAsync(entity);
                 await _dbContext.SaveChangesAsync();
             }
@@ -83,7 +85,7 @@ namespace Hao.GroupBlog.Manager.Implements
                 query = query.OrderByDescending(x => x.CreatedAt);
                 if (parameter.Sort != null && parameter.Sort.ToLower() == "desc")
                 {
-                    if (parameter.SortColumn?.ToLower() == "FileName".ToLower())
+                    if (parameter.SortColumn?.ToLower() == "Name".ToLower())
                         query = query.OrderByDescending(x => x.Name);
                 }
                 else

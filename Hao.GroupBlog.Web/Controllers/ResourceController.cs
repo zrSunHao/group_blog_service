@@ -74,7 +74,7 @@ namespace Hao.GroupBlog.Web.Controllers
                 };
 
                 var result = await _manager.Save(model);
-                if (result.Success) res.Data = _manager.BuilderFileUrl(model.FileName);
+                if (result.Success) res.Data = model.FileName;
                 else new MyCustomException(result.AllMessages);
             }
             catch (Exception e)

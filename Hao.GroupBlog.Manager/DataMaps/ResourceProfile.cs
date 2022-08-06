@@ -13,8 +13,7 @@ namespace Hao.GroupBlog.Manager.DataMaps
                 .ForMember(x => x.Id, y => y.Ignore())
                 .ForMember(x => x.CreatedAt, y => y.MapFrom(z => DateTime.Now));
 
-            CreateMap<FileResource, ResourceM>()
-                .ForMember(x => x.FileName, y => y.MapFrom(z => z.Name));
+            CreateMap<FileResource, ResourceM>();
         }
     }
 }
