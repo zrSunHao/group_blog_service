@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Hao.GroupBlog.Persistence.Entities
 {
     [Table(nameof(Sequence))]
-    [Index(nameof(GroupKey), IsUnique = true)]
+    [Index(nameof(GroupKey), IsUnique = false)]
     public class Sequence
     {
         [Key]

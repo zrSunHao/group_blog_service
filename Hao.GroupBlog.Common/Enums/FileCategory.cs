@@ -12,6 +12,10 @@
 
         note_audio = 4,
 
-        note_vedio = 5
+        note_vedio = 5,
+
+        topic_logo = 11,
+
+        column_logo = 12,
     }
 }

@@ -19,7 +19,7 @@ namespace Hao.GroupBlog.Web.Controllers
         }
 
         [HttpPost("AddDomain")]
-        public async Task<ResponseResult<bool>> AddDomain(DomainM model)
+        public async Task<ResponseResult<DomainM>> AddDomain(DomainM model)
         {
             return await _manager.AddDomain(model);
         }
@@ -48,8 +48,11 @@ namespace Hao.GroupBlog.Web.Controllers
             return await _manager.SortDomain(sequnces);
         }
 
+
+
+
         [HttpPost("AddTopic")]
-        public async Task<ResponseResult<bool>> AddTopic(TopicM model)
+        public async Task<ResponseResult<TopicM>> AddTopic(TopicM model)
         {
             return await _manager.AddTopic(model);
         }
@@ -78,8 +81,16 @@ namespace Hao.GroupBlog.Web.Controllers
             return await _manager.SortTopic(model);
         }
 
+        [HttpPatch("AddTopicLogo")]
+        public async Task<ResponseResult<bool>> AddTopicLogo(string id, string logo)
+        {
+            return await _manager.AddTopicLogo(id, logo);
+        }
+
+
+
         [HttpPost("AddColumn")]
-        public async Task<ResponseResult<bool>> AddColumn(ColumnM model)
+        public async Task<ResponseResult<ColumnM>> AddColumn(ColumnM model)
         {
             return await _manager.AddColumn(model);
         }
@@ -106,6 +117,12 @@ namespace Hao.GroupBlog.Web.Controllers
         public async Task<ResponseResult<bool>> SortColumn(SequnceM model)
         {
             return await _manager.SortColumn(model);
+        }
+
+        [HttpPatch("AddColumnLogo")]
+        public async Task<ResponseResult<bool>> AddColumnLogo(string id, string logo)
+        {
+            return await _manager.AddColumnLogo(id, logo);
         }
     }
 }

@@ -5,7 +5,7 @@ namespace Hao.GroupBlog.Domain.Interfaces
 {
     public interface ISeriesManager
     {
-        public Task<ResponseResult<bool>> AddDomain(DomainM model);
+        public Task<ResponseResult<DomainM>> AddDomain(DomainM model);
 
         public Task<ResponseResult<bool>> UpdateDomain(DomainM model);
 
@@ -16,7 +16,7 @@ namespace Hao.GroupBlog.Domain.Interfaces
         public Task<ResponseResult<bool>> SortDomain(List<OptionItem<int>> sequnces);
 
 
-        public Task<ResponseResult<bool>> AddTopic(TopicM model);
+        public Task<ResponseResult<TopicM>> AddTopic(TopicM model);
 
         public Task<ResponseResult<bool>> UpdateTopic(TopicM model);
 
@@ -26,8 +26,10 @@ namespace Hao.GroupBlog.Domain.Interfaces
 
         public Task<ResponseResult<bool>> SortTopic(SequnceM model);
 
+        public Task<ResponseResult<bool>> AddTopicLogo(string id, string logo);
 
-        public Task<ResponseResult<bool>> AddColumn(ColumnM model);
+
+        public Task<ResponseResult<ColumnM>> AddColumn(ColumnM model);
 
         public Task<ResponseResult<bool>> UpdateColumn(ColumnM model);
 
@@ -36,5 +38,7 @@ namespace Hao.GroupBlog.Domain.Interfaces
         public Task<ResponsePagingResult<ColumnM>> GetColumnList(string topicId);
 
         public Task<ResponseResult<bool>> SortColumn(SequnceM model);
+
+        public Task<ResponseResult<bool>> AddColumnLogo(string id, string logo);
     }
 }

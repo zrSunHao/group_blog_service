@@ -182,7 +182,7 @@ namespace Hao.GroupBlog.Persistence.Migrations
                 {
                     Id = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
                     Name = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
-                    Logo = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
+                    Logo = table.Column<string>(type: "TEXT", maxLength: 64, nullable: true),
                     DomainId = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     CreatedById = table.Column<string>(type: "TEXT", maxLength: 32, nullable: true),
@@ -263,7 +263,7 @@ namespace Hao.GroupBlog.Persistence.Migrations
                 name: "IX_Sequence_GroupKey",
                 table: "Sequence",
                 column: "GroupKey",
-                unique: true);
+                unique: false);
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserLastLoginRecord_LoginId",

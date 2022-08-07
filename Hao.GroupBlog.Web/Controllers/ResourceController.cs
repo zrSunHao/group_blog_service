@@ -8,6 +8,7 @@ using Hao.GroupBlog.Manager.Implements;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
+using System.Diagnostics;
 using System.Net.Http.Headers;
 
 namespace Hao.GroupBlog.Web.Controllers
@@ -98,7 +99,6 @@ namespace Hao.GroupBlog.Web.Controllers
             {
                 try { await _privilege.GetLoginRecord(key); }
                 catch (Exception e) { return Forbid(e.Message); }
-
                 return GetLocalFileByName(name);
             }
             catch (Exception e)

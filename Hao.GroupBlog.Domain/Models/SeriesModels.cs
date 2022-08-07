@@ -12,6 +12,8 @@ namespace Hao.GroupBlog.Domain.Models
 
         [Required]
         public int Order { get; set; } = 1024;
+
+        public List<TopicM> Topics { get; set; }
     }
 
     public class TopicM
@@ -21,8 +23,7 @@ namespace Hao.GroupBlog.Domain.Models
         [Required]
         public string Name { get; set; }
 
-        [Required]
-        public string Logo { get; set; }
+        public string? Logo { get; set; }
 
         [Required]
         public string DomainId { get; set; }

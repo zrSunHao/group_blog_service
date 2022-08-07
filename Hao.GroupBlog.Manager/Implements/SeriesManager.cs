@@ -3,17 +3,12 @@ using Hao.GroupBlog.Domain.Interfaces;
 using Hao.GroupBlog.Domain.Models;
 using Hao.GroupBlog.Domain.Paging;
 using Hao.GroupBlog.Manager.Basic;
-using Entities = Hao.GroupBlog.Persistence.Entities;
+using Hao.GroupBlog.Persistence.Database;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Hao.GroupBlog.Persistence.Database;
-using Microsoft.EntityFrameworkCore;
+using Entities = Hao.GroupBlog.Persistence.Entities;
 
 namespace Hao.GroupBlog.Manager.Implements
 {
@@ -32,9 +27,9 @@ namespace Hao.GroupBlog.Manager.Implements
             _logger = logger;
         }
 
-        public async Task<ResponseResult<bool>> AddDomain(DomainM model)
+        public async Task<ResponseResult<DomainM>> AddDomain(DomainM model)
         {
-            var res = new ResponseResult<bool>();
+            var res = new ResponseResult<DomainM>();
             try
             {
                 var exist = await _dbContext.Domain.AnyAsync(x => x.Name == model.Name && x.CreatedById == CurrentUserId && !x.Deleted);
@@ -44,6 +39,7 @@ namespace Hao.GroupBlog.Manager.Implements
                 entity.CreatedById = CurrentUserId;
                 await _dbContext.AddAsync(entity);
                 await _dbContext.SaveChangesAsync();
+                res.Data = _mapper.Map<Entities.Domain, DomainM>(entity);
             }
             catch (Exception e)
             {
@@ -102,17 +98,26 @@ namespace Hao.GroupBlog.Manager.Implements
             var res = new ResponsePagingResult<DomainM>();
             try
             {
-                var entities = await _dbContext.Domain.AsNoTracking().Where(x => !x.Deleted && x.CreatedById == CurrentUserId).ToListAsync();
-                var data = _mapper.Map<List<Entities.Domain>, List<DomainM>>(entities);
+                var domains = await _dbContext.Domain.AsNoTracking().Where(x => !x.Deleted && x.CreatedById == CurrentUserId).ToListAsync();
+                var ds = _mapper.Map<List<Entities.Domain>, List<DomainM>>(domains);
                 var groupkey = $"{DOMAIN_GROUP_KEY}_{CurrentUserId}";
                 var sequences = await _dbContext.Sequence.AsNoTracking().Where(x => x.GroupKey == groupkey).ToListAsync();
-                
-                data.ForEach(x => {
+
+                var dsIds = ds.Select(x => x.Id).ToList();
+                var topics = await _dbContext.Topic.AsNoTracking().Where(x => !x.Deleted && dsIds.Contains(x.DomainId)).ToListAsync();
+                var ts = _mapper.Map<List<Entities.Topic>, List<TopicM>>(topics);
+                var qc = await _dbContext.Sequence.AsNoTracking().Where(x => dsIds.Contains(x.GroupKey)).ToListAsync();
+
+                ds.ForEach(x =>
+                {
                     var index = sequences.FirstOrDefault(y => y.TrgetId == x.Id)?.Order;
                     if (index == null) index = 1024;
                     x.Order = index.Value;
+                    var sts = ts.Where(y => y.DomainId == x.Id).ToList();
+                    var qcs = qc.Where(y => y.GroupKey == x.Id).ToList();
+                    x.Topics = this.SortTopics(sts, qcs);
                 });
-                res.Data = data.OrderBy(x=>x.Order).ToList();
+                res.Data = ds.OrderBy(x => x.Order).ToList();
             }
             catch (Exception e)
             {
@@ -146,9 +151,9 @@ namespace Hao.GroupBlog.Manager.Implements
         }
 
 
-        public async Task<ResponseResult<bool>> AddTopic(TopicM model)
+        public async Task<ResponseResult<TopicM>> AddTopic(TopicM model)
         {
-            var res = new ResponseResult<bool>();
+            var res = new ResponseResult<TopicM>();
             try
             {
                 var exist = await _dbContext.Topic.AnyAsync(x => x.Name == model.Name && x.DomainId == model.DomainId && !x.Deleted);
@@ -158,6 +163,7 @@ namespace Hao.GroupBlog.Manager.Implements
                 entity.CreatedById = CurrentUserId;
                 await _dbContext.AddAsync(entity);
                 await _dbContext.SaveChangesAsync();
+                res.Data = _mapper.Map<Entities.Topic, TopicM>(entity);
             }
             catch (Exception e)
             {
@@ -178,7 +184,7 @@ namespace Hao.GroupBlog.Manager.Implements
                 if (entity == null) throw new Exception("主题数据为空！");
 
                 entity.Name = model.Name;
-                entity.Logo = model.Logo;
+                //entity.Logo = model.Logo;
                 entity.LastModifiedById = CurrentUserId;
                 entity.LastModifiedAt = DateTime.Now;
                 await _dbContext.SaveChangesAsync();
@@ -221,7 +227,8 @@ namespace Hao.GroupBlog.Manager.Implements
                 var data = _mapper.Map<List<Entities.Topic>, List<TopicM>>(entities);
                 var sequences = await _dbContext.Sequence.AsNoTracking().Where(x => x.GroupKey == domainId).ToListAsync();
 
-                data.ForEach(x => {
+                data.ForEach(x =>
+                {
                     var index = sequences.FirstOrDefault(y => y.TrgetId == x.Id)?.Order;
                     if (index == null) index = 1024;
                     x.Order = index.Value;
@@ -242,7 +249,7 @@ namespace Hao.GroupBlog.Manager.Implements
             {
                 var entity = await _dbContext.Topic.FirstOrDefaultAsync(x => x.Id == model.DragObjectId);
                 if (entity == null) throw new Exception("主题数据为空！");
-                if(entity.DomainId != model.DropGroupId)
+                if (entity.DomainId != model.DropGroupId)
                 {
                     entity.DomainId = model.DropGroupId;
                     entity.LastModifiedById = CurrentUserId;
@@ -267,10 +274,27 @@ namespace Hao.GroupBlog.Manager.Implements
             return res;
         }
 
-
-        public async Task<ResponseResult<bool>> AddColumn(ColumnM model)
+        public async Task<ResponseResult<bool>> AddTopicLogo(string id,string logo)
         {
             var res = new ResponseResult<bool>();
+            try
+            {
+                var entity = await _dbContext.Topic.FirstOrDefaultAsync(x => x.Id == id);
+                if (entity == null) throw new Exception("主题数据为空！");
+                entity.Logo = logo;
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"添加主题【{id}】Logo失败！");
+            }
+            return res;
+        }
+
+
+        public async Task<ResponseResult<ColumnM>> AddColumn(ColumnM model)
+        {
+            var res = new ResponseResult<ColumnM>();
             try
             {
                 var exist = await _dbContext.Column.AnyAsync(x => x.Name == model.Name && x.TopicId == model.TopicId && !x.Deleted);
@@ -280,6 +304,7 @@ namespace Hao.GroupBlog.Manager.Implements
                 entity.CreatedById = CurrentUserId;
                 await _dbContext.AddAsync(entity);
                 await _dbContext.SaveChangesAsync();
+                res.Data = _mapper.Map<Entities.Column, ColumnM>(entity);
             }
             catch (Exception e)
             {
@@ -344,7 +369,8 @@ namespace Hao.GroupBlog.Manager.Implements
                 var data = _mapper.Map<List<Entities.Column>, List<ColumnM>>(entities);
                 var sequences = await _dbContext.Sequence.AsNoTracking().Where(x => x.GroupKey == topicId).ToListAsync();
 
-                data.ForEach(x => {
+                data.ForEach(x =>
+                {
                     var index = sequences.FirstOrDefault(y => y.TrgetId == x.Id)?.Order;
                     if (index == null) index = 1024;
                     x.Order = index.Value;
@@ -389,6 +415,36 @@ namespace Hao.GroupBlog.Manager.Implements
                 _logger.LogError(e, $"主题【{model.DropGroupId}】下的专栏排序失败！");
             }
             return res;
+        }
+
+        public async Task<ResponseResult<bool>> AddColumnLogo(string id, string logo)
+        {
+            var res = new ResponseResult<bool>();
+            try
+            {
+                var entity = await _dbContext.Column.FirstOrDefaultAsync(x => x.Id == id);
+                if (entity == null) throw new Exception("专栏数据为空！");
+                entity.Logo = logo;
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"添加专栏【{id}】Logo失败！");
+            }
+            return res;
+        }
+
+
+        private List<TopicM> SortTopics(List<TopicM> topics, List<Entities.Sequence> sequences)
+        {
+            if (!topics.Any()) return topics;
+            topics.ForEach(x =>
+            {
+                var index = sequences.FirstOrDefault(y => y.TrgetId == x.Id)?.Order;
+                if (index == null) index = 1024;
+                x.Order = index.Value;
+            });
+            return topics.OrderBy(x => x.Order).ToList();
         }
     }
 }
