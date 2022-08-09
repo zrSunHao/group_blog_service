@@ -39,8 +39,7 @@ namespace Hao.GroupBlog.Domain.Models
         [Required]
         public string Name { get; set; }
 
-        [Required]
-        public string Logo { get; set; }
+        public string? Logo { get; set; }
 
         [Required]
         public string Intro { get; set; }

@@ -44,6 +44,7 @@ namespace Hao.GroupBlog.Manager.Implements
             catch (Exception e)
             {
                 _logger.LogError(e, $"添加领域【{model.Name}】失败！");
+                res.AddError(e);
             }
             return res;
         }
@@ -67,6 +68,7 @@ namespace Hao.GroupBlog.Manager.Implements
             catch (Exception e)
             {
                 _logger.LogError(e, $"更新领域【{model.Name}】失败！");
+                res.AddError(e);
             }
             return res;
         }
@@ -89,6 +91,7 @@ namespace Hao.GroupBlog.Manager.Implements
             catch (Exception e)
             {
                 _logger.LogError(e, $"删除领域【{id}】失败！");
+                res.AddError(e);
             }
             return res;
         }
@@ -122,6 +125,7 @@ namespace Hao.GroupBlog.Manager.Implements
             catch (Exception e)
             {
                 _logger.LogError(e, $"获取领域列表失败！");
+                res.AddError(e);
             }
             return res;
         }
@@ -146,6 +150,36 @@ namespace Hao.GroupBlog.Manager.Implements
             catch (Exception e)
             {
                 _logger.LogError(e, $"领域排序失败！");
+                res.AddError(e);
+            }
+            return res;
+        }
+
+        public async Task<ResponsePagingResult<OptionItem<string>>> GetDomainItems()
+        {
+            var res = new ResponsePagingResult<OptionItem<string>>();
+            try
+            {
+                var domains = await _dbContext.Domain.AsNoTracking().Where(x => !x.Deleted && x.CreatedById == CurrentUserId).ToListAsync();
+                var ds = _mapper.Map<List<Entities.Domain>, List<DomainM>>(domains);
+                var groupkey = $"{DOMAIN_GROUP_KEY}_{CurrentUserId}";
+                var sequences = await _dbContext.Sequence.AsNoTracking().Where(x => x.GroupKey == groupkey).ToListAsync();
+                ds.ForEach(x =>
+                {
+                    var index = sequences.FirstOrDefault(y => y.TrgetId == x.Id)?.Order;
+                    if (index == null) index = 1024;
+                });
+#pragma warning disable CA1806 // 不要忽略方法结果
+#pragma warning disable CS8601 // 引用类型赋值可能为 null。
+                res.Data = ds.OrderBy(x => x.Order).Select(y => new OptionItem<string>() { Key = y.Id, Value = y.Name }).ToList();
+#pragma warning restore CS8601 // 引用类型赋值可能为 null。
+#pragma warning restore CA1806 // 不要忽略方法结果
+                res.RowsCount = res.Data.Count();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"获取领域下拉列表数据失败！");
+                res.AddError(e);
             }
             return res;
         }
@@ -168,6 +202,7 @@ namespace Hao.GroupBlog.Manager.Implements
             catch (Exception e)
             {
                 _logger.LogError(e, $"添加主题【{model.Name}】失败！");
+                res.AddError(e);
             }
             return res;
         }
@@ -192,6 +227,7 @@ namespace Hao.GroupBlog.Manager.Implements
             catch (Exception e)
             {
                 _logger.LogError(e, $"更新主题【{model.Name}】失败！");
+                res.AddError(e);
             }
             return res;
         }
@@ -214,16 +250,24 @@ namespace Hao.GroupBlog.Manager.Implements
             catch (Exception e)
             {
                 _logger.LogError(e, $"删除主题【{id}】失败！");
+                res.AddError(e);
             }
             return res;
         }
 
-        public async Task<ResponsePagingResult<TopicM>> GetTopicList(string domainId)
+        public async Task<ResponsePagingResult<OptionItem<string>>> GetTopicItems(string domainId)
         {
-            var res = new ResponsePagingResult<TopicM>();
+            var res = new ResponsePagingResult<OptionItem<string>>();
             try
             {
                 var entities = await _dbContext.Topic.AsNoTracking().Where(x => !x.Deleted && x.CreatedById == CurrentUserId).ToListAsync();
+                if (!entities.Any())
+                {
+                    res.Data = new List<OptionItem<string>>();
+                    return res;
+                }
+                if (entities.FirstOrDefault()?.CreatedById != CurrentUserId) throw new MyCustomException("不是您的创建领域，无权获取主题信息！");
+
                 var data = _mapper.Map<List<Entities.Topic>, List<TopicM>>(entities);
                 var sequences = await _dbContext.Sequence.AsNoTracking().Where(x => x.GroupKey == domainId).ToListAsync();
 
@@ -233,11 +277,17 @@ namespace Hao.GroupBlog.Manager.Implements
                     if (index == null) index = 1024;
                     x.Order = index.Value;
                 });
-                res.Data = data.OrderBy(x => x.Order).ToList();
+#pragma warning disable CA1806 // 不要忽略方法结果
+#pragma warning disable CS8601 // 引用类型赋值可能为 null。
+                res.Data = data.OrderBy(x => x.Order).Select(y => new OptionItem<string>() { Key = y.Id, Value = y.Name }).ToList();
+#pragma warning restore CS8601 // 引用类型赋值可能为 null。
+#pragma warning restore CA1806 // 不要忽略方法结果
+                res.RowsCount = res.Data.Count();
             }
             catch (Exception e)
             {
                 _logger.LogError(e, $"获取领域【{domainId}】下的主题列表失败！");
+                res.AddError(e);
             }
             return res;
         }
@@ -270,11 +320,12 @@ namespace Hao.GroupBlog.Manager.Implements
             catch (Exception e)
             {
                 _logger.LogError(e, $"领域【{model.DropGroupId}】下的主题排序失败！");
+                res.AddError(e);
             }
             return res;
         }
 
-        public async Task<ResponseResult<bool>> AddTopicLogo(string id,string logo)
+        public async Task<ResponseResult<bool>> AddTopicLogo(string id, string logo)
         {
             var res = new ResponseResult<bool>();
             try
@@ -287,6 +338,7 @@ namespace Hao.GroupBlog.Manager.Implements
             catch (Exception e)
             {
                 _logger.LogError(e, $"添加主题【{id}】Logo失败！");
+                res.AddError(e);
             }
             return res;
         }
@@ -309,6 +361,7 @@ namespace Hao.GroupBlog.Manager.Implements
             catch (Exception e)
             {
                 _logger.LogError(e, $"添加专栏【{model.Name}】失败！");
+                res.AddError(e);
             }
             return res;
         }
@@ -334,11 +387,12 @@ namespace Hao.GroupBlog.Manager.Implements
             catch (Exception e)
             {
                 _logger.LogError(e, $"更新专栏【{model.Name}】失败！");
+                res.AddError(e);
             }
             return res;
         }
 
-        public async Task<ResponseResult<bool>> DeleteColumnc(string id)
+        public async Task<ResponseResult<bool>> DeleteColumn(string id)
         {
             var res = new ResponseResult<bool>();
             try
@@ -356,6 +410,7 @@ namespace Hao.GroupBlog.Manager.Implements
             catch (Exception e)
             {
                 _logger.LogError(e, $"删除专栏【{id}】失败！");
+                res.AddError(e);
             }
             return res;
         }
@@ -365,7 +420,9 @@ namespace Hao.GroupBlog.Manager.Implements
             var res = new ResponsePagingResult<ColumnM>();
             try
             {
-                var entities = await _dbContext.Column.AsNoTracking().Where(x => !x.Deleted && x.CreatedById == CurrentUserId).ToListAsync();
+                var entities = await _dbContext.Column.AsNoTracking()
+                    .Where(x => !x.Deleted && x.CreatedById == CurrentUserId && x.TopicId == topicId)
+                    .ToListAsync();
                 var data = _mapper.Map<List<Entities.Column>, List<ColumnM>>(entities);
                 var sequences = await _dbContext.Sequence.AsNoTracking().Where(x => x.GroupKey == topicId).ToListAsync();
 
@@ -380,6 +437,7 @@ namespace Hao.GroupBlog.Manager.Implements
             catch (Exception e)
             {
                 _logger.LogError(e, $"获取主题【{topicId}】下的专栏列表失败！");
+                res.AddError(e);
             }
             return res;
         }
@@ -389,30 +447,21 @@ namespace Hao.GroupBlog.Manager.Implements
             var res = new ResponseResult<bool>();
             try
             {
-                var entity = await _dbContext.Column.FirstOrDefaultAsync(x => x.Id == model.DragObjectId);
-                if (entity == null) throw new Exception("专栏数据为空！");
-                if (entity.TopicId != model.DropGroupId)
-                {
-                    entity.TopicId = model.DropGroupId;
-                    entity.LastModifiedById = CurrentUserId;
-                    entity.LastModifiedAt = DateTime.Now;
-                }
-
                 var olds = await _dbContext.Sequence.Where(x => x.GroupKey == model.DropGroupId).ToListAsync();
                 _dbContext.RemoveRange(olds);
 
                 var news = new List<Entities.Sequence>();
                 model.DropTargets.ForEach(x =>
                 {
-                    news.Add(new Entities.Sequence() { GroupKey = entity.TopicId, TrgetId = x.Value, Order = x.Key });
+                    news.Add(new Entities.Sequence() { GroupKey = model.DropGroupId, TrgetId = x.Value, Order = x.Key });
                 });
                 await _dbContext.AddRangeAsync(news);
-                await _dbContext.SaveChangesAsync();
                 await _dbContext.SaveChangesAsync();
             }
             catch (Exception e)
             {
                 _logger.LogError(e, $"主题【{model.DropGroupId}】下的专栏排序失败！");
+                res.AddError(e);
             }
             return res;
         }
@@ -430,6 +479,46 @@ namespace Hao.GroupBlog.Manager.Implements
             catch (Exception e)
             {
                 _logger.LogError(e, $"添加专栏【{id}】Logo失败！");
+                res.AddError(e);
+            }
+            return res;
+        }
+
+        public async Task<ResponsePagingResult<OptionItem<string>>> GetColumnItems(string topicId)
+        {
+            var res = new ResponsePagingResult<OptionItem<string>>();
+            try
+            {
+                var entities = await _dbContext.Column.AsNoTracking()
+                    .Where(x => !x.Deleted && x.CreatedById == CurrentUserId && x.TopicId == topicId)
+                    .ToListAsync();
+                if (!entities.Any())
+                {
+                    res.Data = new List<OptionItem<string>>();
+                    return res;
+                }
+                if (entities.FirstOrDefault()?.CreatedById != CurrentUserId) throw new MyCustomException("不是您的创建领域，无权获取主题信息！");
+
+                var data = _mapper.Map<List<Entities.Column>, List<ColumnM>>(entities);
+                var sequences = await _dbContext.Sequence.AsNoTracking().Where(x => x.GroupKey == topicId).ToListAsync();
+
+                data.ForEach(x =>
+                {
+                    var index = sequences.FirstOrDefault(y => y.TrgetId == x.Id)?.Order;
+                    if (index == null) index = 1024;
+                    x.Order = index.Value;
+                });
+#pragma warning disable CA1806 // 不要忽略方法结果
+#pragma warning disable CS8601 // 引用类型赋值可能为 null。
+                res.Data = data.OrderBy(x => x.Order).Select(y => new OptionItem<string>() { Key = y.Id, Value = y.Name }).ToList();
+#pragma warning restore CS8601 // 引用类型赋值可能为 null。
+#pragma warning restore CA1806 // 不要忽略方法结果
+                res.RowsCount = res.Data.Count();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"获取主题【{topicId}】下的专栏列表失败！");
+                res.AddError(e);
             }
             return res;
         }

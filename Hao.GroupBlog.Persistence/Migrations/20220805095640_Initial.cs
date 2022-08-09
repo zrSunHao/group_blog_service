@@ -125,7 +125,7 @@ namespace Hao.GroupBlog.Persistence.Migrations
                     Hits = table.Column<int>(type: "INTEGER", nullable: false),
                     Opened = table.Column<bool>(type: "INTEGER", nullable: false),
                     ProfileName = table.Column<string>(type: "TEXT", maxLength: 64, nullable: true),
-                    Intro = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    Intro = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     CreatedById = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
                     LastModifiedAt = table.Column<DateTime>(type: "TEXT", nullable: true),

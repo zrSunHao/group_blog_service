@@ -20,7 +20,9 @@ namespace Hao.GroupBlog.Manager.DataMaps
                .ForMember(x => x.LastModifiedAt, y => y.MapFrom(z => DateTime.Now))
                .ForMember(x => x.CreatedAt, y => y.MapFrom(z => DateTime.Now));
 
-            CreateMap<Note, NoteM>();
+            CreateMap<Note, NoteM>()
+                .ForMember(x => x.Order, y => y.Ignore())
+                .ForMember(x => x.Author, y => y.Ignore());
         }
     }
 }

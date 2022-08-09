@@ -35,9 +35,8 @@ namespace Hao.GroupBlog.Persistence.Entities
         [MaxLength(64)]
         public string? ProfileName { get; set; }
 
-        [Required]
         [MaxLength(256)]
-        public string Intro { get; set; }
+        public string? Intro { get; set; }
 
         [Required]
         public DateTime CreatedAt { get; set; }

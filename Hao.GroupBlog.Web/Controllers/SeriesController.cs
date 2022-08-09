@@ -48,7 +48,11 @@ namespace Hao.GroupBlog.Web.Controllers
             return await _manager.SortDomain(sequnces);
         }
 
-
+        [HttpGet("GetDomainItems")]
+        public async Task<ResponsePagingResult<OptionItem<string>>> GetDomainItems()
+        {
+            return await _manager.GetDomainItems();
+        }
 
 
         [HttpPost("AddTopic")]
@@ -69,10 +73,10 @@ namespace Hao.GroupBlog.Web.Controllers
             return await _manager.DeleteTopic(id);
         }
 
-        [HttpGet("GetTopicList")]
-        public async Task<ResponsePagingResult<TopicM>> GetTopicList(string domainId)
+        [HttpGet("GetTopicItems")]
+        public async Task<ResponsePagingResult<OptionItem<string>>> GetTopicItems(string domainId)
         {
-            return await _manager.GetTopicList(domainId);
+            return await _manager.GetTopicItems(domainId);
         }
 
         [HttpPatch("SortTopic")]
@@ -101,10 +105,10 @@ namespace Hao.GroupBlog.Web.Controllers
             return await _manager.UpdateColumn(model);
         }
 
-        [HttpDelete("DeleteColumnc")]
-        public async Task<ResponseResult<bool>> DeleteColumnc(string id)
+        [HttpDelete("DeleteColumn")]
+        public async Task<ResponseResult<bool>> DeleteColumn(string id)
         {
-            return await _manager.DeleteColumnc(id);
+            return await _manager.DeleteColumn(id);
         }
 
         [HttpGet("GetColumnList")]
@@ -123,6 +127,12 @@ namespace Hao.GroupBlog.Web.Controllers
         public async Task<ResponseResult<bool>> AddColumnLogo(string id, string logo)
         {
             return await _manager.AddColumnLogo(id, logo);
+        }
+
+        [HttpGet("GetColumnItems")]
+        public async Task<ResponsePagingResult<OptionItem<string>>> GetColumnItems(string topicId)
+        {
+            return await _manager.GetColumnItems(topicId);
         }
     }
 }

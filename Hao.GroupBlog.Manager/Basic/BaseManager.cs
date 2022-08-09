@@ -84,6 +84,8 @@ namespace Hao.GroupBlog.Manager.Basic
 
         public RoleType CurrentUserRole => this.LoginRecord.Role;
 
+        public string CurrentUserName => this.GetCurrentUserName();
+
 
         private UserLastLoginRecord? _lastLoginRecord;
         private UserLastLoginRecord GetLoginRecord()
@@ -95,6 +97,16 @@ namespace Hao.GroupBlog.Manager.Basic
             else throw new MyCustomException("未查询到登录信息！");
             if (_lastLoginRecord == null) throw new MyCustomException("未查询到登录信息！");
             else return _lastLoginRecord;
+        }
+
+        private string? _currentUserName;
+        private string GetCurrentUserName()
+        {
+            if (!string.IsNullOrWhiteSpace(_currentUserName)) return _currentUserName;
+            var member = _dbContext.Member.FirstOrDefault(x => x.Id == CurrentUserId);
+            var userName = member == null ? "" : member.UserName;
+            _currentUserName = userName;
+            return userName;
         }
     }
 }

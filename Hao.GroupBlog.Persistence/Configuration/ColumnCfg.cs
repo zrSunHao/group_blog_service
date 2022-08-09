@@ -10,7 +10,7 @@ namespace Hao.GroupBlog.Persistence.Configuration
         {
             builder.Property(x => x.Name).HasMaxLength(64).IsRequired();
 
-            builder.Property(x => x.Logo).HasMaxLength(64).IsRequired();
+            builder.Property(x => x.Logo).HasMaxLength(64);
 
             builder.Property(x => x.Intro).HasMaxLength(256).IsRequired();
 

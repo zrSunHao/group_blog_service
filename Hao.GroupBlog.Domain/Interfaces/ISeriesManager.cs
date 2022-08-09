@@ -15,6 +15,8 @@ namespace Hao.GroupBlog.Domain.Interfaces
 
         public Task<ResponseResult<bool>> SortDomain(List<OptionItem<int>> sequnces);
 
+        public Task<ResponsePagingResult<OptionItem<string>>> GetDomainItems();
+
 
         public Task<ResponseResult<TopicM>> AddTopic(TopicM model);
 
@@ -22,7 +24,7 @@ namespace Hao.GroupBlog.Domain.Interfaces
 
         public Task<ResponseResult<bool>> DeleteTopic(string id);
 
-        public Task<ResponsePagingResult<TopicM>> GetTopicList(string domainId);
+        public Task<ResponsePagingResult<OptionItem<string>>> GetTopicItems(string domainId);
 
         public Task<ResponseResult<bool>> SortTopic(SequnceM model);
 
@@ -33,12 +35,14 @@ namespace Hao.GroupBlog.Domain.Interfaces
 
         public Task<ResponseResult<bool>> UpdateColumn(ColumnM model);
 
-        public Task<ResponseResult<bool>> DeleteColumnc(string id);
+        public Task<ResponseResult<bool>> DeleteColumn(string id);
 
         public Task<ResponsePagingResult<ColumnM>> GetColumnList(string topicId);
 
         public Task<ResponseResult<bool>> SortColumn(SequnceM model);
 
         public Task<ResponseResult<bool>> AddColumnLogo(string id, string logo);
+
+        public Task<ResponsePagingResult<OptionItem<string>>> GetColumnItems(string topicId);
     }
 }

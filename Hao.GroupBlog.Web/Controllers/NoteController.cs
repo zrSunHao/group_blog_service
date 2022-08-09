@@ -19,7 +19,7 @@ namespace Hao.GroupBlog.Web.Controllers
         }
 
         [HttpPost("Add")]
-        public async Task<ResponseResult<bool>> Add(NoteM model)
+        public async Task<ResponseResult<NoteM>> Add(NoteM model)
         {
             return await _manager.Add(model);
         }
@@ -28,6 +28,12 @@ namespace Hao.GroupBlog.Web.Controllers
         public async Task<ResponseResult<bool>> Update(NoteM model)
         {
             return await _manager.Update(model);
+        }
+
+        [HttpPatch("Open")]
+        public async Task<ResponseResult<bool>> Open(string id, bool opened)
+        {
+            return await _manager.Open(id, opened);
         }
 
         [HttpPatch("AddProfile")]
@@ -54,13 +60,20 @@ namespace Hao.GroupBlog.Web.Controllers
             return await _manager.Delete(id);
         }
 
-        [HttpPost("GetMyList")]
-        public async Task<ResponsePagingResult<NoteM>> GetMyList(PagingParameter<string> parameter)
+        [HttpGet("GetMyList")]
+        public async Task<ResponsePagingResult<NoteM>> GetMyList(string columnId)
         {
-            return await _manager.GetMyList(parameter);
+            return await _manager.GetMyList(columnId);
         }
 
-        
+        [HttpPatch("SortMyNotes")]
+        public async Task<ResponseResult<bool>> SortMyNotes(SequnceM model)
+        {
+            return await _manager.SortMyNotes(model);
+        }
+
+
+
 
         [HttpPatch("Favorite")]
         public async Task<ResponseResult<bool>> Favorite(string id, string? columnId)

@@ -20,7 +20,11 @@
 
         public string Intro { get; set; }
 
-        public DateTime LastModifiedAt { get; set; }
+        public DateTime? LastModifiedAt { get; set; }
+
+        public int Order { get; set; } = 1024;
+
+        public string? Author { get; set; }
     }
 
     public class NoteContentM

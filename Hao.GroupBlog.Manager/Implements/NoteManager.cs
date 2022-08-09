@@ -42,9 +42,9 @@ namespace Hao.GroupBlog.Manager.Implements
             return res;
         }
 
-        public async Task<ResponseResult<bool>> Add(NoteM model)
+        public async Task<ResponseResult<NoteM>> Add(NoteM model)
         {
-            var res = new ResponseResult<bool>();
+            var res = new ResponseResult<NoteM>();
             try
             {
                 var content = new NoteContent();
@@ -55,10 +55,14 @@ namespace Hao.GroupBlog.Manager.Implements
 
                 Note note = _mapper.Map<NoteM, Note>(model);
                 note.ContentId = content.Id;
+                note.CreatedById = CurrentUserId;
 
                 await _dbContext.AddAsync(note);
                 await _dbContext.AddAsync(content);
                 await _dbContext.SaveChangesAsync();
+                var m = _mapper.Map<Note, NoteM>(note);
+                m.Author = CurrentUserName;
+                res.Data = m;
             }
             catch (Exception e)
             {
@@ -79,7 +83,6 @@ namespace Hao.GroupBlog.Manager.Implements
 
                 entity.Name = model.Name;
                 entity.Keys = model.Keys;
-                entity.Opened = model.Opened;
                 entity.ProfileName = model.ProfileName;
                 entity.Intro = model.Intro;
                 entity.LastModifiedById = CurrentUserId;
@@ -89,7 +92,30 @@ namespace Hao.GroupBlog.Manager.Implements
             catch (Exception e)
             {
                 res.AddError(e);
-                _logger.LogError(e, $"添加笔记【{model.Name}】信息失败！");
+                _logger.LogError(e, $"更新笔记【{model.Name}】信息失败！");
+            }
+            return res;
+        }
+
+        public async Task<ResponseResult<bool>> Open(string id,bool opened)
+        {
+            var res = new ResponseResult<bool>();
+            try
+            {
+                if (string.IsNullOrEmpty(id)) throw new Exception("笔记标识为空！");
+                var entity = await _dbContext.Note.FirstOrDefaultAsync(x => x.ContentId == id);
+                if (entity == null) throw new Exception("笔记数据为空！");
+                if (entity.CreatedById != CurrentUserId) throw new Exception("不是笔记的所有者，无权操作！");
+
+                entity.Opened = opened;
+                entity.LastModifiedById = CurrentUserId;
+                entity.LastModifiedAt = DateTime.Now;
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                res.AddError(e);
+                _logger.LogError(e, $"更新笔记【{id}】分享状态失败！");
             }
             return res;
         }
@@ -178,35 +204,60 @@ namespace Hao.GroupBlog.Manager.Implements
             return res;
         }
 
-        public async Task<ResponsePagingResult<NoteM>> GetMyList(PagingParameter<string> parameter)
+        public async Task<ResponsePagingResult<NoteM>> GetMyList(string columnId)
         {
             var res = new ResponsePagingResult<NoteM>();
             try
             {
-                var query = _dbContext.Note.AsNoTracking().Where(x => !x.Deleted && x.CreatedById == CurrentUserId);
-                query = query.OrderByDescending(x => x.LastModifiedAt);
-                if (string.IsNullOrEmpty(parameter.Filter))
+                var entities = await _dbContext.Note.AsNoTracking()
+                    .Where(x => !x.Deleted && x.CreatedById == CurrentUserId && x.ColumnId == columnId)
+                    .OrderByDescending(x => x.LastModifiedAt)
+                    .ToListAsync();
+                res.RowsCount = entities.Count();
+                var data = _mapper.Map<List<Note>, List<NoteM>>(entities);
+                var sequences = await _dbContext.Sequence.AsNoTracking().Where(x => x.GroupKey == columnId).ToListAsync();
+                data.ForEach(x =>
                 {
-                    query = query.Where(x => x.ColumnId == parameter.Filter);
-                    res.RowsCount = await query.CountAsync();
-                }
-                else
-                {
-                    res.RowsCount = await query.CountAsync();
-                    query = query.AsPaging(parameter.PageIndex, parameter.PageSize);
-                }
-                var data = await query.ToListAsync();
-                res.Data = _mapper.Map<List<Note>, List<NoteM>>(data);
+                    var index = sequences.FirstOrDefault(y => y.TrgetId == x.ContentId)?.Order;
+                    if (index == null) index = 1024;
+                    x.Order = index.Value;
+                    x.Author = CurrentUserName;
+                });
+                res.Data = data.OrderBy(x => x.Order).ToList();
             }
             catch (Exception e)
             {
                 res.AddError(e);
-                _logger.LogError(e, $"获取笔记列表失败！搜索条件为【{parameter.Filter}】");
+                _logger.LogError(e, $"获取专栏【{columnId}】下我的笔记列表失败！");
             }
             return res;
         }
 
-        
+        public async Task<ResponseResult<bool>> SortMyNotes(SequnceM model)
+        {
+            var res = new ResponseResult<bool>();
+            try
+            {
+                var olds = await _dbContext.Sequence.Where(x => x.GroupKey == model.DropGroupId).ToListAsync();
+                _dbContext.RemoveRange(olds);
+
+                var news = new List<Sequence>();
+                model.DropTargets.ForEach(x =>
+                {
+                    news.Add(new Sequence() { GroupKey = model.DropGroupId, TrgetId = x.Value, Order = x.Key });
+                });
+                await _dbContext.AddRangeAsync(news);
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"专栏【{model.DropGroupId}】下的笔记排序失败！");
+                res.AddError(e);
+            }
+            return res;
+        }
+
+
 
         public async Task<ResponseResult<bool>> Favorite(string id, string? columnId)
         {
@@ -375,7 +426,7 @@ namespace Hao.GroupBlog.Manager.Implements
             {
                 var query = _dbContext.Note.AsNoTracking().Where(x => !x.Deleted && x.Opened);
                 if (string.IsNullOrEmpty(parameter.Filter))
-                    query = query.Where(x => x.Name.Contains(parameter.Filter) || x.Keys.Contains(parameter.Filter) || x.Intro.Contains(parameter.Filter));
+                    query = query.Where(x => x.Name.Contains(parameter.Filter) || x.Keys.Contains(parameter.Filter));
 
                 query = query.OrderByDescending(x => x.LastModifiedAt);
                 if (parameter.Sort != null && parameter.Sort.ToLower() == "desc")
