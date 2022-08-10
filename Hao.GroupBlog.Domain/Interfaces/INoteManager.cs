@@ -30,13 +30,17 @@ namespace Hao.GroupBlog.Domain.Interfaces
 
         public Task<ResponseResult<bool>> CancelFavorite(string id);
 
+        public Task<ResponseResult<bool>> SortFavoriteNotes(SequnceM model);
+
+        public Task<ResponsePagingResult<NoteM>> GetFavoriteList(string columnId);
+
+
         public Task<ResponseResult<NoteContentM>> GetContent(string id);
 
         public Task<ResponseResult<bool>> SaveContent(NoteContentM model);
 
-        public Task<ResponseResult<NoteContentM>> GetOpenedContent(string id);
 
-        public Task<ResponsePagingResult<NoteM>> GetFavoriteList(string columnId);
+        public Task<ResponseResult<NoteContentM>> GetOpenedContent(string id);
 
         public Task<ResponsePagingResult<NoteM>> GetOpenedList(PagingParameter<string> parameter);
     }

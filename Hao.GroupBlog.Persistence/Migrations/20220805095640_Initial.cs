@@ -229,7 +229,7 @@ namespace Hao.GroupBlog.Persistence.Migrations
                 name: "IX_Favorite_MemberId",
                 table: "Favorite",
                 column: "MemberId",
-                unique: true);
+                unique: false);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Favorite_NoteId",

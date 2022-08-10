@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Hao.GroupBlog.Persistence.Entities
 {
     [Table(nameof(Favorite))]
-    [Index(nameof(MemberId), IsUnique = true)]
+    [Index(nameof(MemberId), IsUnique = false)]
     [Index(nameof(NoteId), IsUnique = false)]
     [Index(nameof(ColumnId), IsUnique = false)]
     public class Favorite

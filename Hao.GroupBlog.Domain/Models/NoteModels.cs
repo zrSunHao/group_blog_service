@@ -25,6 +25,10 @@
         public int Order { get; set; } = 1024;
 
         public string? Author { get; set; }
+
+        public string? CreatedById { get; set; }
+
+        public bool? Checked { get; set; }
     }
 
     public class NoteContentM

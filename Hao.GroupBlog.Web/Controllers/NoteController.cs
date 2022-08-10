@@ -73,8 +73,6 @@ namespace Hao.GroupBlog.Web.Controllers
         }
 
 
-
-
         [HttpPatch("Favorite")]
         public async Task<ResponseResult<bool>> Favorite(string id, string? columnId)
         {
@@ -86,6 +84,20 @@ namespace Hao.GroupBlog.Web.Controllers
         {
             return await _manager.CancelFavorite(id);
         }
+
+        [HttpPatch("SortFavoriteNotes")]
+        public async Task<ResponseResult<bool>> SortFavoriteNotes(SequnceM model)
+        {
+            return await _manager.SortFavoriteNotes(model);
+        }
+
+        [HttpGet("GetFavoriteList")]
+        public async Task<ResponsePagingResult<NoteM>> GetFavoriteList(string columnId)
+        {
+            return await _manager.GetFavoriteList(columnId);
+        }
+
+
 
         [HttpGet("GetContent")]
         public async Task<ResponseResult<NoteContentM>> GetContent(string id)
@@ -99,19 +111,15 @@ namespace Hao.GroupBlog.Web.Controllers
             return await _manager.SaveContent(model);
         }
 
+
+
         [HttpGet("GetOpenedContent")]
         [AllowAnonymous]
         public async Task<ResponseResult<NoteContentM>> GetOpenedContent(string id)
         {
             return await _manager.GetOpenedContent(id);
         }
-
-        [HttpGet("GetFavoriteList")]
-        public async Task<ResponsePagingResult<NoteM>> GetFavoriteList(string columnId)
-        {
-            return await _manager.GetFavoriteList(columnId);
-        }
-
+        
         [HttpPost("GetOpenedList")]
         public async Task<ResponsePagingResult<NoteM>> GetOpenedList(PagingParameter<string> parameter)
         {

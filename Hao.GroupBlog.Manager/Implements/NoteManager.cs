@@ -26,7 +26,7 @@ namespace Hao.GroupBlog.Manager.Implements
             _logger = logger;
         }
 
-        public async Task<bool> IsOpen(string noteId,string fileName)
+        public async Task<bool> IsOpen(string noteId, string fileName)
         {
             var res = false;
             try
@@ -82,7 +82,7 @@ namespace Hao.GroupBlog.Manager.Implements
             var res = new ResponseResult<bool>();
             try
             {
-                if(string.IsNullOrEmpty(model.ContentId)) throw new Exception("笔记标识为空！");
+                if (string.IsNullOrEmpty(model.ContentId)) throw new Exception("笔记标识为空！");
                 var entity = await _dbContext.Note.FirstOrDefaultAsync(x => x.ContentId == model.ContentId);
                 if (entity == null) throw new Exception("笔记数据为空！");
 
@@ -102,7 +102,7 @@ namespace Hao.GroupBlog.Manager.Implements
             return res;
         }
 
-        public async Task<ResponseResult<bool>> Open(string id,bool opened)
+        public async Task<ResponseResult<bool>> Open(string id, bool opened)
         {
             var res = new ResponseResult<bool>();
             try
@@ -269,8 +269,8 @@ namespace Hao.GroupBlog.Manager.Implements
             var res = new ResponseResult<bool>();
             try
             {
-                var entity = await _dbContext.Favorite.FirstOrDefaultAsync(x=>x.NoteId == id && x.MemberId == CurrentUserId);
-                if(entity == null)
+                var entity = await _dbContext.Favorite.FirstOrDefaultAsync(x => x.NoteId == id && x.MemberId == CurrentUserId);
+                if (entity == null)
                 {
                     entity = new Favorite()
                     {
@@ -314,6 +314,71 @@ namespace Hao.GroupBlog.Manager.Implements
             return res;
         }
 
+        public async Task<ResponsePagingResult<NoteM>> GetFavoriteList(string columnId)
+        {
+            var res = new ResponsePagingResult<NoteM>();
+            try
+            {
+                var query = from f in _dbContext.Favorite
+                            join n in _dbContext.Note on f.NoteId equals n.ContentId
+                            where f.MemberId == CurrentUserId && f.ColumnId == columnId
+                            where !n.Deleted && n.Opened
+                            select n;
+                res.RowsCount = await query.CountAsync();
+                var entities = await query.ToListAsync();
+
+                var data = _mapper.Map<List<Note>, List<NoteM>>(entities);
+                var userIds = data.Select(x => x.CreatedById).ToList();
+                var dcs = await _dbContext.Member.AsNoTracking()
+                    .Where(x => userIds.Contains(x.Id))
+                    .Select(y => new { Id = y.Id, UserName = y.UserName })
+                    .ToListAsync();
+                var sequences = await _dbContext.Sequence.AsNoTracking().Where(x => x.GroupKey == columnId).ToListAsync();
+                data.ForEach(x =>
+                {
+                    x.ColumnId = columnId;
+                    var user = dcs.FirstOrDefault(y => y.Id == x.CreatedById);
+                    if (user != null) x.Author = user.UserName;
+                    var index = sequences.FirstOrDefault(y => y.TrgetId == x.ContentId)?.Order;
+                    if (index == null) index = 1024;
+                    x.Order = index.Value;
+                });
+                res.Data = data.OrderBy(x => x.Order).ToList();
+            }
+            catch (Exception e)
+            {
+                res.AddError(e);
+                _logger.LogError(e, $"获取笔记列表失败！搜索条件为【{columnId}】");
+            }
+            return res;
+        }
+
+        public async Task<ResponseResult<bool>> SortFavoriteNotes(SequnceM model)
+        {
+            var res = new ResponseResult<bool>();
+            try
+            {
+                var olds = await _dbContext.Sequence.Where(x => x.GroupKey == model.DropGroupId).ToListAsync();
+                _dbContext.RemoveRange(olds);
+
+                var news = new List<Sequence>();
+                model.DropTargets.ForEach(x =>
+                {
+                    news.Add(new Sequence() { GroupKey = model.DropGroupId, TrgetId = x.Value, Order = x.Key });
+                });
+                await _dbContext.AddRangeAsync(news);
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"收藏专栏【{model.DropGroupId}】下的笔记排序失败！");
+                res.AddError(e);
+            }
+            return res;
+        }
+
+
+
         public async Task<ResponseResult<NoteContentM>> GetContent(string id)
         {
             var res = new ResponseResult<NoteContentM>();
@@ -321,7 +386,7 @@ namespace Hao.GroupBlog.Manager.Implements
             {
                 var entity = await _dbContext.NoteContent.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
                 if (entity == null) throw new Exception("笔记内容数据未查询到！");
-                var content  = new NoteContentM()
+                var content = new NoteContentM()
                 {
                     Id = id,
                     Content = entity.Content
@@ -366,6 +431,8 @@ namespace Hao.GroupBlog.Manager.Implements
             return res;
         }
 
+
+
         public async Task<ResponseResult<NoteContentM>> GetOpenedContent(string id)
         {
             var res = new ResponseResult<NoteContentM>();
@@ -392,36 +459,13 @@ namespace Hao.GroupBlog.Manager.Implements
             return res;
         }
 
-        public async Task<ResponsePagingResult<NoteM>> GetFavoriteList(string columnId)
-        {
-            var res = new ResponsePagingResult<NoteM>();
-            try
-            {
-                var query = from f in _dbContext.Favorite
-                            join n in _dbContext.Note on f.NoteId equals n.ContentId
-                            where f.MemberId == CurrentUserId && f.ColumnId == columnId
-                            where !n.Deleted && n.Opened
-                            select n;
-                query = query.OrderByDescending(x => x.LastModifiedAt);
-                res.RowsCount = await query.CountAsync();
-                var data = await query.ToListAsync();
-                res.Data = _mapper.Map<List<Note>, List<NoteM>>(data);
-            }
-            catch (Exception e)
-            {
-                res.AddError(e);
-                _logger.LogError(e, $"获取笔记列表失败！搜索条件为【{columnId}】");
-            }
-            return res;
-        }
-
         public async Task<ResponsePagingResult<NoteM>> GetOpenedList(PagingParameter<string> parameter)
         {
             var res = new ResponsePagingResult<NoteM>();
             try
             {
                 var query = _dbContext.Note.AsNoTracking().Where(x => !x.Deleted && x.Opened);
-                if (string.IsNullOrEmpty(parameter.Filter))
+                if (!string.IsNullOrEmpty(parameter.Filter))
                     query = query.Where(x => x.Name.Contains(parameter.Filter) || x.Keys.Contains(parameter.Filter));
 
                 query = query.OrderByDescending(x => x.LastModifiedAt);
@@ -439,8 +483,26 @@ namespace Hao.GroupBlog.Manager.Implements
                 }
                 res.RowsCount = await query.CountAsync();
                 query = query.AsPaging(parameter.PageIndex, parameter.PageSize);
-                var data = await query.ToListAsync();
-                res.Data = _mapper.Map<List<Note>, List<NoteM>>(data);
+                var entities = await query.ToListAsync();
+
+                var data = _mapper.Map<List<Note>, List<NoteM>>(entities);
+                var userIds = data.Select(x => x.CreatedById).ToList();
+                var us = await _dbContext.Member.AsNoTracking()
+                    .Where(x => userIds.Contains(x.Id))
+                    .Select(y => new { Id = y.Id, UserName = y.UserName })
+                    .ToListAsync();
+                var noteIds = data.Select(x => x.ContentId).ToList();
+                var ns = await _dbContext.Favorite.AsNoTracking()
+                    .Where(x => noteIds.Contains(x.NoteId) && x.MemberId == CurrentUserId)
+                    .Select(y => y.NoteId)
+                    .ToListAsync();
+                data.ForEach(x =>
+                {
+                    var user = us.FirstOrDefault(y => y.Id == x.CreatedById);
+                    if (user != null) x.Author = user.UserName;
+                    x.Checked = ns.Any(y => y == x.ContentId);
+                });
+                res.Data = data;
             }
             catch (Exception e)
             {
