@@ -6,14 +6,13 @@
 
         public const string PLATFORM_ISSUER = "Platform:Issuer";
 
-
         public const string PLATFORM_MACHINE_CODE = "Platform:MachineCode";
 
+        public const string PLATFORM_MY_APP_NAME = "Platform:MyAppName";
 
-        public const string FILE_RESOURCE_BASE_URL = "FileResourceBaseUrl";
+        public const string PLATFORM_SUPER_MANAGER_NAME = "Platform:SuperManagerName";
 
         public const string FILE_RESOURCE_DIRECTORY = "FileStorageDirectory";
 
-        public const string SUPER_MANAGER_KEY = "SuperManagerKey";
     }
 }

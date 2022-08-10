@@ -33,7 +33,7 @@ namespace Hao.GroupBlog.Manager.Implements
             {
                 var entity = await (from r in _dbContext.FileResource
                                     join n in _dbContext.Note on r.OwnId equals n.ContentId
-                                    where r.Name == fileName
+                                    where r.FileName == fileName
                                     where !n.Deleted && n.Opened && n.ContentId == noteId
                                     select n)
                 .FirstOrDefaultAsync();

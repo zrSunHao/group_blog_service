@@ -51,6 +51,9 @@ namespace Hao.GroupBlog.Manager.Implements
                 member.Password = hash;
                 member.PasswordSalt = salt;
 
+                var super = GetConfiguration(CfgConsts.PLATFORM_SUPER_MANAGER_NAME);
+                if (member.UserName == super) member.Role = Common.Enums.RoleType.super_manager;
+
                 await _dbContext.AddAsync(member);
                 await _dbContext.SaveChangesAsync();
             }

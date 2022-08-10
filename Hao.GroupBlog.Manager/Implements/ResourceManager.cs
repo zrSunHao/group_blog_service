@@ -81,7 +81,7 @@ namespace Hao.GroupBlog.Manager.Implements
                     if (filter.StartAt.HasValue) query = query.Where(x => x.CreatedAt >= filter.StartAt.Value);
                     if (filter.EndAt.HasValue) query = query.Where(x => x.CreatedAt <= filter.EndAt.Value.AddDays(1).AddSeconds(-1));
                 }
-
+                query = query.Where(x => x.CreatedById == CurrentUserId);
                 query = query.OrderByDescending(x => x.CreatedAt);
                 if (parameter.Sort != null && parameter.Sort.ToLower() == "desc")
                 {
@@ -113,11 +113,6 @@ namespace Hao.GroupBlog.Manager.Implements
         {
             var entity = new FileResource();
             return entity.GetId(MachineCode);
-        }
-
-        public string BuilderFileUrl(string? fileName)
-        {
-            return base.BuilderFileUrl(fileName);
         }
     }
 }

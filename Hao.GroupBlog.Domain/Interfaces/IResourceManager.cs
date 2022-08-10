@@ -12,7 +12,5 @@ namespace Hao.GroupBlog.Domain.Interfaces
         public Task<ResponsePagingResult<ResourceM>> GetList(PagingParameter<ResourceFilter> parameter);
 
         public string GetNewCode();
-
-        public string BuilderFileUrl(string? fileName);
     }
 }

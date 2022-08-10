@@ -42,28 +42,9 @@ namespace Hao.GroupBlog.Manager.Basic
         protected KeyValuePair<string, StringValues> GetHeader(string key) => _httpContextAccessor.HttpContext.Request.Headers.FirstOrDefault(x => x.Key == key);
 
         /// <summary>
-        /// 生成文件加载url
-        /// </summary>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
-        protected string BuilderFileUrl(string? fileName, string key = "")
-        {
-            if (string.IsNullOrEmpty(fileName)) return "";
-            var baseUrl = FileResourceUrl;
-            if (string.IsNullOrEmpty(key)) key = CurrentLoginId.ToString();
-            if (fileName.Contains(baseUrl)) return fileName;
-            return $"{baseUrl}?name={fileName}&key={key}";
-        }
-
-        /// <summary>
         /// 机器码
         /// </summary>
         protected string MachineCode => GetConfiguration(CfgConsts.PLATFORM_MACHINE_CODE);
-
-        /// <summary>
-        /// 资源地址
-        /// </summary>
-        protected string FileResourceUrl => GetConfiguration(CfgConsts.FILE_RESOURCE_BASE_URL);
 
         protected string? RemoteIpAddress => _httpContextAccessor?.HttpContext?.Connection?.RemoteIpAddress?.ToString();
 
