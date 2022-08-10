@@ -134,5 +134,37 @@ namespace Hao.GroupBlog.Web.Controllers
         {
             return await _manager.GetColumnItems(topicId);
         }
+
+
+
+        [HttpPost("AddFavoriteColumn")]
+        public async Task<ResponseResult<ColumnM>> AddFavoriteColumn(ColumnM model)
+        {
+            return await _manager.AddFavoriteColumn(model);
+        }
+
+        [HttpGet("GetFavoriteColumnList")]
+        public async Task<ResponsePagingResult<ColumnM>> GetFavoriteColumnList()
+        {
+            return await _manager.GetFavoriteColumnList();
+        }
+
+        [HttpGet("GetFavoriteColumnItems")]
+        public async Task<ResponsePagingResult<OptionItem<string>>> GetFavoriteColumnItems()
+        {
+            return await _manager.GetFavoriteColumnItems();
+        }
+
+        [HttpPatch("SortFavoriteColumn")]
+        public async Task<ResponseResult<bool>> SortFavoriteColumn(SequnceM model)
+        {
+            return await _manager.SortFavoriteColumn(model);
+        }
+
+        [HttpDelete("DeleteFavoriteColumn")]
+        public async Task<ResponseResult<bool>> DeleteFavoriteColumn(string id)
+        {
+            return await _manager.DeleteFavoriteColumn(id);
+        }
     }
 }

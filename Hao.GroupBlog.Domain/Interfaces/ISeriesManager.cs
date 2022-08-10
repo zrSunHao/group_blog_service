@@ -44,5 +44,16 @@ namespace Hao.GroupBlog.Domain.Interfaces
         public Task<ResponseResult<bool>> AddColumnLogo(string id, string logo);
 
         public Task<ResponsePagingResult<OptionItem<string>>> GetColumnItems(string topicId);
+
+
+        public Task<ResponseResult<ColumnM>> AddFavoriteColumn(ColumnM model);
+
+        public Task<ResponsePagingResult<ColumnM>> GetFavoriteColumnList();
+
+        public Task<ResponsePagingResult<OptionItem<string>>> GetFavoriteColumnItems();
+
+        public Task<ResponseResult<bool>> SortFavoriteColumn(SequnceM model);
+
+        public Task<ResponseResult<bool>> DeleteFavoriteColumn(string id);
     }
 }

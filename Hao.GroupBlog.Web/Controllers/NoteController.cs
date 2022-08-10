@@ -93,22 +93,23 @@ namespace Hao.GroupBlog.Web.Controllers
             return await _manager.GetContent(id);
         }
 
-        [HttpPost("SaveContent")]
+        [HttpPatch("SaveContent")]
         public async Task<ResponseResult<bool>> SaveContent(NoteContentM model)
         {
             return await _manager.SaveContent(model);
         }
 
         [HttpGet("GetOpenedContent")]
+        [AllowAnonymous]
         public async Task<ResponseResult<NoteContentM>> GetOpenedContent(string id)
         {
             return await _manager.GetOpenedContent(id);
         }
 
-        [HttpPost("GetFavoriteList")]
-        public async Task<ResponsePagingResult<NoteM>> GetFavoriteList(PagingParameter<string> parameter)
+        [HttpGet("GetFavoriteList")]
+        public async Task<ResponsePagingResult<NoteM>> GetFavoriteList(string columnId)
         {
-            return await _manager.GetFavoriteList(parameter);
+            return await _manager.GetFavoriteList(columnId);
         }
 
         [HttpPost("GetOpenedList")]

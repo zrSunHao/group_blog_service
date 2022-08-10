@@ -398,9 +398,9 @@ namespace Hao.GroupBlog.Manager.Implements
             try
             {
                 var entity = await _dbContext.Column.FirstOrDefaultAsync(x => x.Id == id);
-                if (entity == null) throw new Exception("主题数据为空！");
+                if (entity == null) throw new Exception("专栏数据为空！");
                 var exist = await _dbContext.Note.AnyAsync(x => !x.Deleted && x.ColumnId == entity.Id);
-                if (exist) throw new Exception("该主题下存在笔记，不能删除！");
+                if (exist) throw new Exception("该专栏下存在笔记，不能删除！");
 
                 entity.DeletedById = CurrentUserId;
                 entity.DeletedAt = DateTime.Now;
@@ -523,6 +523,150 @@ namespace Hao.GroupBlog.Manager.Implements
             return res;
         }
 
+
+
+        public async Task<ResponseResult<ColumnM>> AddFavoriteColumn(ColumnM model)
+        {
+            var res = new ResponseResult<ColumnM>();
+            try
+            {
+                var topicId = this.FavoriteTopicId;
+                var exist = await _dbContext.Column.AnyAsync(x => x.Name == model.Name && x.TopicId == topicId && !x.Deleted);
+                if (exist) throw new Exception("存在同名收藏专栏！");
+                var entity = _mapper.Map<ColumnM, Entities.Column>(model);
+                entity.Id = entity.GetId(MachineCode);
+                entity.CreatedById = CurrentUserId;
+                entity.TopicId = topicId;
+                await _dbContext.AddAsync(entity);
+                await _dbContext.SaveChangesAsync();
+                res.Data = _mapper.Map<Entities.Column, ColumnM>(entity);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"添加收藏专栏【{model.Name}】失败！");
+                res.AddError(e);
+            }
+            return res;
+        }
+
+        public async Task<ResponsePagingResult<ColumnM>> GetFavoriteColumnList()
+        {
+            var res = new ResponsePagingResult<ColumnM>();
+            try
+            {
+                var topicId = this.FavoriteTopicId;
+                var entities = await _dbContext.Column.AsNoTracking()
+                    .Where(x => !x.Deleted && x.CreatedById == CurrentUserId && x.TopicId == topicId)
+                    .ToListAsync();
+                var data = _mapper.Map<List<Entities.Column>, List<ColumnM>>(entities);
+                var sequences = await _dbContext.Sequence.AsNoTracking().Where(x => x.GroupKey == topicId).ToListAsync();
+
+                data.ForEach(x =>
+                {
+                    var index = sequences.FirstOrDefault(y => y.TrgetId == x.Id)?.Order;
+                    if (index == null) index = 1024;
+                    x.Order = index.Value;
+                });
+                res.Data = data.OrderBy(x => x.Order).ToList();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"获取收藏专栏列表失败！");
+                res.AddError(e);
+            }
+            return res;
+        }
+
+        public async Task<ResponsePagingResult<OptionItem<string>>> GetFavoriteColumnItems()
+        {
+            var res = new ResponsePagingResult<OptionItem<string>>();
+            try
+            {
+                var topicId = this.FavoriteTopicId;
+                var entities = await _dbContext.Column.AsNoTracking()
+                    .Where(x => !x.Deleted && x.CreatedById == CurrentUserId && x.TopicId == topicId)
+                    .ToListAsync();
+                if (!entities.Any())
+                {
+                    res.Data = new List<OptionItem<string>>();
+                    return res;
+                }
+
+                var data = _mapper.Map<List<Entities.Column>, List<ColumnM>>(entities);
+                var sequences = await _dbContext.Sequence.AsNoTracking().Where(x => x.GroupKey == topicId).ToListAsync();
+
+                data.ForEach(x =>
+                {
+                    var index = sequences.FirstOrDefault(y => y.TrgetId == x.Id)?.Order;
+                    if (index == null) index = 1024;
+                    x.Order = index.Value;
+                });
+#pragma warning disable CA1806 // 不要忽略方法结果
+#pragma warning disable CS8601 // 引用类型赋值可能为 null。
+                res.Data = data.OrderBy(x => x.Order).Select(y => new OptionItem<string>() { Key = y.Id, Value = y.Name }).ToList();
+#pragma warning restore CS8601 // 引用类型赋值可能为 null。
+#pragma warning restore CA1806 // 不要忽略方法结果
+                res.RowsCount = res.Data.Count();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"获取收藏专栏列表失败！");
+                res.AddError(e);
+            }
+            return res;
+        }
+
+        public async Task<ResponseResult<bool>> SortFavoriteColumn(SequnceM model)
+        {
+            var res = new ResponseResult<bool>();
+            try
+            {
+                var topicId = this.FavoriteTopicId;
+                var olds = await _dbContext.Sequence.Where(x => x.GroupKey == topicId).ToListAsync();
+                _dbContext.RemoveRange(olds);
+
+                var news = new List<Entities.Sequence>();
+                model.DropTargets.ForEach(x =>
+                {
+                    news.Add(new Entities.Sequence() { GroupKey = topicId, TrgetId = x.Value, Order = x.Key });
+                });
+                await _dbContext.AddRangeAsync(news);
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"收藏专栏排序失败！");
+                res.AddError(e);
+            }
+            return res;
+        }
+
+        public async Task<ResponseResult<bool>> DeleteFavoriteColumn(string id)
+        {
+            var res = new ResponseResult<bool>();
+            try
+            {
+                var entity = await _dbContext.Column.FirstOrDefaultAsync(x => x.Id == id);
+                if (entity == null) throw new Exception("专栏数据为空！");
+                var exist = await _dbContext.Favorite.AnyAsync(x => x.ColumnId == entity.Id);
+                if (exist) throw new Exception("该专栏下存在收藏的笔记，不能删除！");
+
+                entity.DeletedById = CurrentUserId;
+                entity.DeletedAt = DateTime.Now;
+                entity.Deleted = true;
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"删除专栏【{id}】失败！");
+                res.AddError(e);
+            }
+            return res;
+        }
+
+
+
+        private string FavoriteTopicId => $"MYF{CurrentUserId}";
 
         private List<TopicM> SortTopics(List<TopicM> topics, List<Entities.Sequence> sequences)
         {

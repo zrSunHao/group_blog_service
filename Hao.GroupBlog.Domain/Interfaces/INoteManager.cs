@@ -5,7 +5,7 @@ namespace Hao.GroupBlog.Domain.Interfaces
 {
     public interface INoteManager
     {
-        public Task<bool> IsOpen(string id);
+        public Task<bool> IsOpen(string noteId, string fileName);
 
         public Task<ResponseResult<NoteM>> Add(NoteM model);
 
@@ -36,7 +36,7 @@ namespace Hao.GroupBlog.Domain.Interfaces
 
         public Task<ResponseResult<NoteContentM>> GetOpenedContent(string id);
 
-        public Task<ResponsePagingResult<NoteM>> GetFavoriteList(PagingParameter<string> parameter);
+        public Task<ResponsePagingResult<NoteM>> GetFavoriteList(string columnId);
 
         public Task<ResponsePagingResult<NoteM>> GetOpenedList(PagingParameter<string> parameter);
     }

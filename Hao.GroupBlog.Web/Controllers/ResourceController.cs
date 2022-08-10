@@ -114,7 +114,7 @@ namespace Hao.GroupBlog.Web.Controllers
             try
             {
                 try {
-                    var open = await _note.IsOpen(noteId);
+                    var open = await _note.IsOpen(noteId, name);
                     if (!open) throw new Exception("note is not opened!");
                 }
                 catch (Exception e) { return Forbid(e.Message); }

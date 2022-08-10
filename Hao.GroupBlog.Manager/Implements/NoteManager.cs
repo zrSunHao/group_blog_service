@@ -26,18 +26,23 @@ namespace Hao.GroupBlog.Manager.Implements
             _logger = logger;
         }
 
-        public async Task<bool> IsOpen(string id)
+        public async Task<bool> IsOpen(string noteId,string fileName)
         {
             var res = false;
             try
             {
-                var entity = await _dbContext.Note.AsNoTracking().FirstOrDefaultAsync(x => x.ContentId == id);
+                var entity = await (from r in _dbContext.FileResource
+                                    join n in _dbContext.Note on r.OwnId equals n.ContentId
+                                    where r.Name == fileName
+                                    where !n.Deleted && n.Opened && n.ContentId == noteId
+                                    select n)
+                .FirstOrDefaultAsync();
                 if (entity == null) return false;
                 return entity.Opened;
             }
             catch (Exception e)
             {
-                _logger.LogError(e, $"获取笔记【{id}】分享状态失败！");
+                _logger.LogError(e, $"获取笔记[{noteId}]文件[{fileName}]分享状态失败！");
             }
             return res;
         }
@@ -49,7 +54,7 @@ namespace Hao.GroupBlog.Manager.Implements
             {
                 var content = new NoteContent();
                 content.Id = content.GetId(MachineCode);
-                content.Content = "";
+                content.Content = "[{\"type\":2,\"content\":\"新标题\",\"url\":\"\",\"remark\":\"\",\"order\":1,\"data\":{},\"open\":false,\"children\":[]}]";
                 content.CreatedAt = DateTime.Now;
                 content.CreatedById = CurrentUserId;
 
@@ -387,34 +392,25 @@ namespace Hao.GroupBlog.Manager.Implements
             return res;
         }
 
-        public async Task<ResponsePagingResult<NoteM>> GetFavoriteList(PagingParameter<string> parameter)
+        public async Task<ResponsePagingResult<NoteM>> GetFavoriteList(string columnId)
         {
             var res = new ResponsePagingResult<NoteM>();
             try
             {
                 var query = from f in _dbContext.Favorite
                             join n in _dbContext.Note on f.NoteId equals n.ContentId
-                            where f.MemberId == CurrentUserId
+                            where f.MemberId == CurrentUserId && f.ColumnId == columnId
                             where !n.Deleted && n.Opened
                             select n;
                 query = query.OrderByDescending(x => x.LastModifiedAt);
-                if (string.IsNullOrEmpty(parameter.Filter))
-                {
-                    query = query.Where(x => x.ColumnId == parameter.Filter);
-                    res.RowsCount = await query.CountAsync();
-                }
-                else
-                {
-                    res.RowsCount = await query.CountAsync();
-                    query = query.AsPaging(parameter.PageIndex, parameter.PageSize);
-                }
+                res.RowsCount = await query.CountAsync();
                 var data = await query.ToListAsync();
                 res.Data = _mapper.Map<List<Note>, List<NoteM>>(data);
             }
             catch (Exception e)
             {
                 res.AddError(e);
-                _logger.LogError(e, $"获取笔记列表失败！搜索条件为【{parameter.Filter}】");
+                _logger.LogError(e, $"获取笔记列表失败！搜索条件为【{columnId}】");
             }
             return res;
         }
@@ -449,7 +445,7 @@ namespace Hao.GroupBlog.Manager.Implements
             catch (Exception e)
             {
                 res.AddError(e);
-                _logger.LogError(e, $"获取笔记列表失败！搜索条件为【{parameter.Filter}】");
+                _logger.LogError(e, $"获取公开笔记列表失败！搜索条件为【{parameter.Filter}】");
             }
             return res;
         }

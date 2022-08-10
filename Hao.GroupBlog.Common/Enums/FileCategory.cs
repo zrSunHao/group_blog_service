@@ -17,5 +17,7 @@
         topic_logo = 11,
 
         column_logo = 12,
+
+        favorite_column_logo = 13,
     }
 }
